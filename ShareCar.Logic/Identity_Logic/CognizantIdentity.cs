@@ -81,7 +81,7 @@ namespace ShareCar.Logic.Identity_Logic
             int code = _userlogic.GetUnauthorizedUser(loginEmail).VerificationCode;
             var msg = new SendGridMessage();
 
-            msg.SetFrom(new EmailAddress("edgar.reis447@gmail.com", "Share car"));
+            msg.SetFrom(new EmailAddress("cts.share.car@gmail.com", "Share car"));
 
             var recipients = new List<EmailAddress>
             {
@@ -94,6 +94,7 @@ namespace ShareCar.Logic.Identity_Logic
             msg.AddContent(MimeType.Text, "Your verification code is " + code.ToString());
 
             var response = await _client.SendEmailAsync(msg);
+            var tt=0;
         }
     }
 }
