@@ -36,6 +36,7 @@ namespace ShareCar.Db.Repositories.User_Repository
             var isFacebook = user.FacebookEmail != null;
 
             user.UserName = user.Email;
+            user.NumberOfSeats = 4;
             var result = await _userManager.CreateAsync(user, Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 8));
 
             if (!result.Succeeded)
