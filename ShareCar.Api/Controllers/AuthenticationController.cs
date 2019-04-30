@@ -36,7 +36,7 @@ namespace ShareCar.Api.Controllers
             if (jwt != null)
             {
                 AddJwtToCookie(jwt);
-                return Ok();
+                return Ok(jwt);
             }
             return Unauthorized();
         }
@@ -74,7 +74,7 @@ namespace ShareCar.Api.Controllers
             if (jwt != null)
             {
                 AddJwtToCookie(jwt);
-                return Ok();
+                return Ok(jwt);
             }
             else
             {
@@ -89,7 +89,7 @@ namespace ShareCar.Api.Controllers
             if (jwt != null)
             {
                 AddJwtToCookie(jwt);
-                return Ok();
+                return Ok(jwt);
             }
             else
             {
