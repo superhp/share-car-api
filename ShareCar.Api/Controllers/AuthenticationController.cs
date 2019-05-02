@@ -111,7 +111,7 @@ namespace ShareCar.Api.Controllers
             var options = new CookieOptions
             {
                 HttpOnly = true,
-                Domain = "cts-share-car.azurewebsites.net"
+                SameSite = SameSiteMode.None,
             };
             Response.Cookies.Append("token", jwt, options);
         }
