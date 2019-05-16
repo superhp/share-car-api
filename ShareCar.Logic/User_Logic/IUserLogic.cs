@@ -11,7 +11,7 @@ namespace ShareCar.Logic.User_Logic
     public interface IUserLogic
     {
         Task<UserDto> GetUserAsync(ClaimsPrincipal principal);
-        Task UpdateUserAsync(UserDto updatedUser, ClaimsPrincipal User);
+        Task UpdateUserAsync(UserDto updatedUser);
         int CountPoints(string email);
         List<Tuple<UserDto, int>> GetWinnerBoard();
         IEnumerable<UserDto> GetAllUsers();

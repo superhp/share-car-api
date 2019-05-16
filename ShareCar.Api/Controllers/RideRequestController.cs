@@ -22,7 +22,7 @@ namespace ShareCar.Api.Controllers
     public class RideRequestController : Controller
     {
         private readonly IRideRequestLogic _requestLogic;
-        private readonly IRideRequestNoteLogic _noteLogic;
+        private readonly IRideRequestNoteLogic _requestNoteLogic;
         private readonly IUserRepository _userRepository;
         private readonly IRideLogic _rideLogic;
         private readonly IDriverSeenNoteRepository _driverSeenNoteRepository;
@@ -32,7 +32,7 @@ namespace ShareCar.Api.Controllers
             _requestLogic = requestLogic;
             _userRepository = userRepository;
             _rideLogic = rideLogic;
-            _noteLogic = noteLogic;
+            _requestNoteLogic = noteLogic;
             _driverSeenNoteRepository = driverSeenNoteRepository;
         }
 
@@ -47,23 +47,26 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpGet("{requestId}")]
-        public IActionResult SeenNote(int requestId)
+        public async Task<IActionResult> DriverSeenNoteAsync(int requestId)
         {
+            await ValidatePassengerAsync(requestId);
             _driverSeenNoteRepository.NoteSeen(requestId);
             return Ok();
         }
 
         [HttpGet("{requestId}")]
-        public IActionResult NoteSeen(int requestId)
+        public async Task<IActionResult> RequestNoteSeenAsync(int requestId)
         {
-            _noteLogic.NoteSeen(requestId);
+            await ValidatePassengerAsync(requestId);
+            _requestNoteLogic.NoteSeen(requestId);
             return Ok();
         }
 
         [HttpPost("updateNote")]
-        public IActionResult UpdateNote([FromBody] RideRequestNoteDto note)
+        public async Task<IActionResult> UpdateNoteAsync([FromBody] RideRequestNoteDto note)
         {
-            _noteLogic.UpdateNote(note);
+            await ValidatePassengerAsync(note.RideRequestId);
+            _requestNoteLogic.UpdateNote(note);
             return Ok();
         }
 
@@ -76,21 +79,19 @@ namespace ShareCar.Api.Controllers
             }
             var userDto = await _userRepository.GetLoggedInUser(User);
             request.PassengerEmail = userDto.Email;
-            var ride = _rideLogic.GetRideById(request.RideId);
 
-            if(ride == null)
-            {
-                throw new RideNoLongerExistsException();
-            }
-
-            _requestLogic.AddRequest(request, ride.DriverEmail);
+            _requestLogic.AddRequest(request);
 
             return Ok();
         }
 
         [HttpPost("seenPassenger")]
-        public void SeenRequestsPassenger([FromBody] int[] requests)
+        public async Task SeenRequestsPassengerAsync([FromBody] int[] requests)
         {
+            foreach(var request in requests)
+            {
+                await ValidatePassengerAsync(request);
+            }
             _requestLogic.SeenByPassenger(requests);
         }
 
@@ -101,17 +102,26 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpPut]
-        public IActionResult UpdateRequests([FromBody] RideRequestDto request)
+        public async Task<IActionResult> UpdateRequestsAsync([FromBody] RideRequestDto request)
         {
             if (request == null)
             {
                 return BadRequest();
             }
+            var userDto = await _userRepository.GetLoggedInUser(User);
 
-            _requestLogic.UpdateRequest(request);
+            _requestLogic.UpdateRequest(request, userDto.Email);
 
             return Ok();
+        }
 
+        private async Task ValidatePassengerAsync(int rideRequestId)
+        {
+            var userDto = await _userRepository.GetLoggedInUser(User);
+            if (!_requestLogic.IsRequester(rideRequestId, userDto.Email))
+            {
+                throw new UnauthorizedAccessException();
+            }
         }
     }
 }
