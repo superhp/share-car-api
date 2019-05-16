@@ -47,6 +47,13 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpGet("{requestId}")]
+        public IActionResult SeenNote(int requestId)
+        {
+            _driverSeenNoteRepository.NoteSeen(requestId);
+            return Ok();
+        }
+
+        [HttpGet("{requestId}")]
         public IActionResult NoteSeen(int requestId)
         {
             _noteLogic.NoteSeen(requestId);

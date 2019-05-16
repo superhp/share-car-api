@@ -298,5 +298,25 @@ namespace ShareCar.Logic.Ride_Logic
         {
             return _rideRepository.IsRideRequested(rideId, email);
         }
+        public bool IsDriver(int rideId, string email)
+        {
+            var ride = _rideRepository.GetRideById(rideId);
+            if (ride.DriverEmail != email)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool IsPassenger(int rideId, string email)
+        {
+            var passengers = GetPassengersByRideId(rideId).Select(x => x.Email);
+            if (!passengers.Contains(email))
+            {
+                return false;
+            }
+            return true;
+        }
+
     }
 }
