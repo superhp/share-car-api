@@ -52,7 +52,6 @@ namespace ShareCar.Logic.Route_Logic
 
             if (routeDto.FromAddress != null)
             {
-                // If user needs a ride to office, he recieves routes independently from his location
                 address = _mapper.Map<AddressDto, Address>(routeDto.FromAddress);
                 isFromOffice = true;                
             }
@@ -61,37 +60,10 @@ namespace ShareCar.Logic.Route_Logic
             List<RouteDto> dtoRoutes = new List<RouteDto>();
             foreach(var route in entityRoutes)
             {
-                RouteDto mappedRoute = new RouteDto();
-                mappedRoute.Rides = new List<RideDto>();
-                List<Ride> rides = new List<Ride>();
-                foreach(var ride in route.Rides)
-                {
-                    if(ride.DriverEmail != email && ride.RideDateTime >= routeDto.FromTime && ride.isActive)
-                    {
-                        ride.Route = null;
-                        rides.Add(ride);
-                    }
-                }
-                route.Rides = rides;
-                if (route.Rides.Count != 0)
-                {
-                    foreach (var ride in route.Rides)
-                    {
-                        if (ride.NumberOfSeats > 0 && ride.RideDateTime >= DateTime.Now)
-                        {
-                            mappedRoute.Rides.Add(_mapper.Map<Ride, RideDto>(ride));
-                        }
-                    }
-                    if (mappedRoute.Rides.Count > 0)
-                    {
-                        mappedRoute.FromAddress = _mapper.Map<Address, AddressDto>(route.FromAddress);
-                        mappedRoute.ToAddress = _mapper.Map<Address, AddressDto>(route.ToAddress);
-                        mappedRoute.FromId = route.FromId;
-                        mappedRoute.Geometry = route.Geometry;
-
-                        dtoRoutes.Add(mappedRoute);
-                    }
-                }
+                RouteDto mappedRoute = _mapper.Map<Route, RouteDto>(route);
+                mappedRoute.FromId = route.FromId;
+                mappedRoute.ToId = route.ToId;
+                dtoRoutes.Add(mappedRoute);
             }
             return dtoRoutes;
         }

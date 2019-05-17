@@ -31,28 +31,11 @@ namespace ShareCar.Db.Repositories.Ride_Repository
             return entity;
             }
 
-        public IEnumerable<Ride> GetRidesByDate(DateTime date)
-        {
-            return _databaseContext.Rides
-                    .Where(x => x.RideDateTime == date && x.isActive == true);
-        }
-
-        public IEnumerable<Ride> GetRidesByDestination(int addressToId)
-        {
-            return _databaseContext.Rides
-                .Where(x => x.Route.ToId == addressToId && x.isActive == true);
-        }
-
         public Ride GetRideById(int id)
         {
                 return _databaseContext.Rides.SingleOrDefault(x => x.RideId == id && x.isActive == true); 
         }
 
-        public IEnumerable<Ride> GetRidesByStartPoint(int addressFromId)
-        {
-            return _databaseContext.Rides
-                .Where(x => x.Route.FromId == addressFromId && x.isActive == true);
-        }
         public IEnumerable<Passenger> GetPassengersByRideId(int id)
         {
             return _databaseContext.Passengers.Where(x => x.RideId == id);
@@ -82,20 +65,15 @@ namespace ShareCar.Db.Repositories.Ride_Repository
                 _databaseContext.SaveChanges();
         }
 
-        public IEnumerable<Ride> GetSimmilarRides(string driverEmail, int routeId, int rideId)
-        {
-            return _databaseContext.Rides.Where(x => x.DriverEmail == driverEmail && x.RouteId == routeId && x.RideId != rideId && x.isActive == true);
-        }
-
         public IEnumerable<Ride> GetRidesByDriver(string email)
         {
             return _databaseContext.Rides
                 .Where(x => x.DriverEmail == email && x.isActive == true);
         }
 
-        public IEnumerable<Ride> GetRidesByRoute(string routeGeometry)
+        public IEnumerable<Ride> GetRidesByRoute(int routeId)
         {
-            return _databaseContext.Rides.Where(x => x.Route.Geometry == routeGeometry && x.isActive == true);
+            return _databaseContext.Rides.Where(x => x.RouteId == routeId && x.isActive == true);
         }
 
         public bool IsRideRequested(int rideId, string passengerEmail)

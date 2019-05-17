@@ -54,17 +54,23 @@ namespace ShareCar.Db.Repositories.Route_Repository
         {
             if (isFromOffice)
             {
-                return _databaseContext.Routes.Include(x => x.Rides)
+                return _databaseContext.Routes
                     .Include(x => x.FromAddress)
                     .Include(x => x.ToAddress)
-                    .Where(x => x.FromAddress.City == address.City && x.FromAddress.Street == address.Street && x.FromAddress.Number == address.Number);
+                    .Where(x => x.FromAddress.City == address.City &&
+                    x.FromAddress.Street == address.Street &&
+                    x.FromAddress.Number == address.Number &&
+                    (x.Rides.Where(y => y.isActive && y.RideDateTime > DateTime.Now && y.NumberOfSeats > 0).Count() > 0));
             }
             else
             {
-                return _databaseContext.Routes.Include(x => x.Rides)
+                return _databaseContext.Routes
                     .Include(x => x.FromAddress)
                     .Include(x => x.ToAddress)
-                    .Where(x => x.ToAddress.City == address.City && x.ToAddress.Street == address.Street && x.ToAddress.Number == address.Number);
+                    .Where(x => x.ToAddress.City == address.City &&
+                    x.ToAddress.Street == address.Street &&
+                    x.ToAddress.Number == address.Number &&
+                    (x.Rides.Where(y => y.isActive && y.RideDateTime > DateTime.Now && y.NumberOfSeats > 0).Count() > 0));
             }
         }
 

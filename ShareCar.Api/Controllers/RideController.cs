@@ -90,31 +90,11 @@ namespace ShareCar.Api.Controllers
             return Ok(rides);
         }
 
-        [HttpGet("ridedate={rideDate}")]
-        public IActionResult GetRidesByDate(DateTime rideDate)
+        [HttpGet("RidesByRoute/{routeId}")]
+        public async Task<IActionResult> GetRidesByRouteAsync(int routeId)
         {
-            IEnumerable<RideDto> rides = _rideLogic.GetRidesByDate(rideDate);
-            return Ok(rides);
-        }
-
-        [HttpGet("addressFromId={addressFromId}")]
-        public IActionResult GetRidesByStartPoint(int addressFromId)
-        {
-            IEnumerable<RideDto> rides = _rideLogic.GetRidesByStartPoint(addressFromId);
-            return Ok(rides);
-        }
-
-        [HttpGet("addressToId={addressToId}")]
-        public IActionResult GetRidesByDestination(int addressToId)
-        {
-            IEnumerable<RideDto> rides = _rideLogic.GetRidesByDestination(addressToId);
-            return Ok(rides);
-        }
-
-        [HttpGet("ridesByRoute={routeGeometry}")]
-        public IActionResult GetRidesRouteAsync(string routeGeometry)
-        {
-            IEnumerable<RideDto> rides = _rideLogic.GetRidesByRoute(routeGeometry);
+            var userDto = await _userRepository.GetLoggedInUser(User);
+            IEnumerable<RideDto> rides = _rideLogic.GetRidesByRoute(routeId, userDto.Email);
             return Ok(rides);
         }
 
@@ -137,10 +117,6 @@ namespace ShareCar.Api.Controllers
         {
             var userDto = await _userRepository.GetLoggedInUser(User);
             await ValidateDriverAsync(rideId);
-            if (!_rideLogic.DoesUserBelongsToRide(userDto.Email, rideId))
-            {
-                return Unauthorized();
-            }
 
             IEnumerable<PassengerDto> passengers = _rideLogic.GetPassengersByRideId(rideId);
             return Ok(passengers);

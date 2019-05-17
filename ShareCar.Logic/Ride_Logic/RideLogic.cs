@@ -52,14 +52,6 @@ namespace ShareCar.Logic.Ride_Logic
             return _mapper.Map<Ride, RideDto>(ride);
         }
 
-        public IEnumerable<RideDto> GetRidesByDate(DateTime date)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByDate(date);
-
-
-            return MapToList(rides);
-        }
-
         public IEnumerable<RideDto> GetRidesByDriver(string email)
         {
             IEnumerable<Ride> rides = _rideRepository.GetRidesByDriver(email);
@@ -102,18 +94,6 @@ namespace ShareCar.Logic.Ride_Logic
             return dtoRides;
         }
 
-        public IEnumerable<RideDto> GetRidesByStartPoint(int addressFromId)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByStartPoint(addressFromId);
-            return MapToList(rides);
-        }
-
-        public IEnumerable<RideDto> GetRidesByDestination(int addressToId)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByDestination(addressToId);
-            return MapToList(rides);
-        }
-
         public IEnumerable<PassengerDto> GetPassengersByRideId(int id)
         {
             IEnumerable<Passenger> passengers = _rideRepository.GetPassengersByRideId(id);
@@ -137,22 +117,6 @@ namespace ShareCar.Logic.Ride_Logic
             _rideRepository.SetRideAsInactive(_mapper.Map<RideDto, Ride>(rideDto));
         }
 
-        public bool DoesUserBelongsToRide(string email, int rideId)
-        {
-            Ride ride = _rideRepository.GetRideById(rideId);
-
-            if (ride == null)
-            {
-                return false;
-            }
-
-            if (ride.DriverEmail == email || ride.Passengers.Any(x => x.Email == email))
-            {
-                return true;
-            }
-            return false;
-        }
-
         // Returns a list of mapped objects
         private IEnumerable<RideDto> MapToList(IEnumerable<Ride> rides)
         {
@@ -174,14 +138,6 @@ namespace ShareCar.Logic.Ride_Logic
                 DtoPassengers.Add(_mapper.Map<Passenger, PassengerDto>(passenger));
             }
             return DtoPassengers;
-        }
-
-        public IEnumerable<RideDto> GetSimilarRides(RideDto ride)
-        {
-            string driverEmail = ride.DriverEmail;
-            int routeId = ride.RouteId;
-            IEnumerable<Ride> rides = _rideRepository.GetSimmilarRides(driverEmail, routeId, ride.RideId);
-            return MapToList(rides);
         }
 
         private void AddRouteIdToRide(RideDto ride)
@@ -214,7 +170,7 @@ namespace ShareCar.Logic.Ride_Logic
             List<RouteDto> routes = _routeLogic.GetRoutes(routeDto, email);
             foreach (RouteDto route in routes)
             {
-                AddDriversNamesToRouteRides(route.Rides);
+                AddDriversNamesToRides(route.Rides);
             }
             return routes;
 
@@ -248,7 +204,7 @@ namespace ShareCar.Logic.Ride_Logic
             return dtoRides;
         }
 
-        public bool AddDriversNamesToRouteRides(List<RideDto> dtoRides)
+        public bool AddDriversNamesToRides(List<RideDto> dtoRides)
         {
             List<string> emails = new List<string>();
             List<string> FirstNames = new List<string>();
@@ -278,13 +234,21 @@ namespace ShareCar.Logic.Ride_Logic
             return true;
         }
 
-        public IEnumerable<RideDto> GetRidesByRoute(string routeGeometry)
+        public IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail)
         {
-            IEnumerable<Ride> entityRides = _rideRepository.GetRidesByRoute(routeGeometry);
+            IEnumerable<Ride> entityRides = _rideRepository.GetRidesByRoute(routeId);
 
             List<RideDto> dtoRides = (List<RideDto>)MapToList(entityRides);
 
-            AddDriversNamesToRouteRides(dtoRides);
+            AddDriversNamesToRides(dtoRides);
+
+            foreach(var ride in dtoRides)
+            {
+                if (IsRideRequested(ride.RideId, passengerEmail))
+                {
+                    ride.Requested = true;
+                }
+            }
 
             return dtoRides;
         }

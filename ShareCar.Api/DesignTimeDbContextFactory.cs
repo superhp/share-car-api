@@ -8,20 +8,26 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace ShareCar.Api
 {
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
-        public ApplicationDbContext CreateDbContext(string[] args)
+        private readonly IConfiguration _configuration;
+        public DesignTimeDbContextFactory(IConfiguration configuration)
         {
+            _configuration = configuration;
+        }
+        public ApplicationDbContext CreateDbContext(string[] args)
+        {/*
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
-                .Build();
+                .Build();*/
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-            var connectionString = "Server=DESKTOP-1LV5153\\SQLEXPRESS; Database=shareCar;Trusted_Connection=True;";// configuration.GetConnectionString("DefaultConnection");
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
             builder.UseSqlServer(connectionString);
             return new ApplicationDbContext(builder.Options);
         }
