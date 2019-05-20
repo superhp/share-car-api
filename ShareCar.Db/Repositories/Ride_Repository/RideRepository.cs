@@ -61,6 +61,11 @@ namespace ShareCar.Db.Repositories.Ride_Repository
         {
                 var rideToDelete = _databaseContext.Rides.Include(x => x.Requests).Single(x => x.RideId == ride.RideId);
 
+            if(rideToDelete.RideDateTime < DateTime.Now)
+            {
+                throw new ArgumentException();
+            }
+
                 rideToDelete.isActive = false;
                 _databaseContext.SaveChanges();
         }

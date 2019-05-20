@@ -16,6 +16,7 @@ using ShareCar.Logic.User_Logic;
 using ShareCar.Logic.Note_Logic;
 using ShareCar.Dto.Identity;
 using Microsoft.EntityFrameworkCore.Internal;
+using ShareCar.Logic.Exceptions;
 
 namespace ShareCar.Logic.Ride_Logic
 {
@@ -106,6 +107,11 @@ namespace ShareCar.Logic.Ride_Logic
 
         public void AddRide(RideDto ride, string email)
         {
+            if(ride.RideDateTime < DateTime.Now)
+            {
+                throw new RideInPastException();
+            }
+
             ride.DriverEmail = email;
             ride.Requests = new List<RideRequestDto>();
             AddRouteIdToRide(ride);
