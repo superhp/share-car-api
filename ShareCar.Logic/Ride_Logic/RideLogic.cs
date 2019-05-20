@@ -83,15 +83,18 @@ namespace ShareCar.Logic.Ride_Logic
                 dtoRide.Route = _routeLogic.GetRouteById(ride.RouteId);
                 dtoRide.Route.Rides = null;
                 var note = notes.FirstOrDefault(x => x.RideId == ride.RideId);
-                if(note != null)
+                if (note != null)
                 {
                     dtoRide.Note = note.Text;
+                }
+                if (ride.RideDateTime < DateTime.Now.AddHours(-1))
+                {
+                    dtoRide.Finished = true;
                 }
                 dtoRide.Passengers = passengers.Where(x => x.RideId == ride.RideId).ToList();
                 dtoRides.Add(dtoRide);
             }
-            dtoRides = dtoRides.OrderByDescending(x => x.RideDateTime).ToList();
-            return dtoRides;
+            return dtoRides.OrderBy(x => x, new CustomComparer()).ToList();
         }
 
         public IEnumerable<PassengerDto> GetPassengersByRideId(int id)
@@ -107,7 +110,7 @@ namespace ShareCar.Logic.Ride_Logic
             ride.Requests = new List<RideRequestDto>();
             AddRouteIdToRide(ride);
             var entity = _rideRepository.AddRide(_mapper.Map<RideDto, Ride>(ride));
-            
+
             var note = _driverNoteLogic.AddNote(new DriverNoteDto { Text = ride.Note, RideId = entity.RideId });
             ride.DriverNoteId = note.DriverNoteId;
         }
@@ -180,7 +183,6 @@ namespace ShareCar.Logic.Ride_Logic
         {
             List<PassengerDto> passengers = _passengerLogic.GetUnrepondedPassengersByEmail(passengerEmail);
 
-            //    IEnumerable<Ride> entityRides = _rideRepository.FindRidesByPassenger(_mapper.Map<PassengerDto,Passenger>(passengers));
             List<RideDto> dtoRides = new List<RideDto>();
             DateTime hourAfterRide = new DateTime();
             hourAfterRide = DateTime.Now;
@@ -242,7 +244,7 @@ namespace ShareCar.Logic.Ride_Logic
 
             AddDriversNamesToRides(dtoRides);
 
-            foreach(var ride in dtoRides)
+            foreach (var ride in dtoRides)
             {
                 if (IsRideRequested(ride.RideId, passengerEmail))
                 {
@@ -250,7 +252,7 @@ namespace ShareCar.Logic.Ride_Logic
                 }
             }
 
-            return dtoRides;
+            return dtoRides.OrderBy(x => x.RideDateTime);
         }
 
         public void UpdateRide(RideDto ride)
@@ -283,4 +285,53 @@ namespace ShareCar.Logic.Ride_Logic
         }
 
     }
-}
+
+    class ComparerArgument
+    {
+        public bool Finished { get; set; }
+        public DateTime RideDate { get; set; }
+    }
+
+    class CustomComparer : IComparer<object>
+    {
+        public int Compare(object x, object y)
+        {
+            RideDto ride1 = (RideDto)x;
+            RideDto ride2 = (RideDto)y;
+
+
+            if (ride1.Finished && !ride2.Finished)
+            {
+                return 1;
+
+            }
+            if (ride2.Finished && !ride1.Finished)
+            {
+                return -1;
+
+            }
+            if (ride1.Finished && ride2.Finished)
+            {
+                if(ride1.RideDateTime < ride2.RideDateTime)
+                {
+                    return 1;
+                }
+                if (ride1.RideDateTime > ride2.RideDateTime)
+                {
+                    return -1;
+                }
+                return 0;
+            }
+            
+                if (ride1.RideDateTime > ride2.RideDateTime)
+                {
+                    return 1;
+                }
+                if (ride1.RideDateTime < ride2.RideDateTime)
+                {
+                    return -1;
+                }
+                return 0;
+        }
+    }
+    }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace ShareCar.Api
-{
+{/*
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         private readonly IConfiguration _configuration;
@@ -20,19 +20,19 @@ namespace ShareCar.Api
             _configuration = configuration;
         }
         public ApplicationDbContext CreateDbContext(string[] args)
-        {/*
+        {
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();*/
+                .AddJsonFile("secrets.json")
+                .Build();
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
             builder.UseSqlServer(connectionString);
             return new ApplicationDbContext(builder.Options);
         }
 
    
 
-    }
+    }*/
 }

@@ -12,8 +12,8 @@ using System;
 namespace ShareCar.Db.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20190517061602_Passenger table recreated")]
-    partial class Passengertablerecreated
+    [Migration("20190520071327_Passengers table recreated")]
+    partial class Passengerstablerecreated
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -190,17 +190,20 @@ namespace ShareCar.Db.Migrations
 
             modelBuilder.Entity("ShareCar.Db.Entities.Passenger", b =>
                 {
-                    b.Property<string>("Email");
-
-                    b.Property<int>("RideId");
+                    b.Property<int>("PassengerId")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<bool>("Completed");
 
-                    b.Property<int>("PassengerId");
+                    b.Property<string>("Email");
 
                     b.Property<bool>("PassengerResponded");
 
-                    b.HasKey("Email", "RideId");
+                    b.Property<int>("RideId");
+
+                    b.HasKey("PassengerId");
+
+                    b.HasIndex("Email");
 
                     b.HasIndex("RideId");
 
@@ -300,10 +303,6 @@ namespace ShareCar.Db.Migrations
                     b.HasKey("RouteId");
 
                     b.HasIndex("FromId");
-
-                    b.HasIndex("Geometry")
-                        .IsUnique()
-                        .HasFilter("[Geometry] IS NOT NULL");
 
                     b.HasIndex("ToId");
 
@@ -477,8 +476,7 @@ namespace ShareCar.Db.Migrations
                 {
                     b.HasOne("ShareCar.Db.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("Email")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("Email");
 
                     b.HasOne("ShareCar.Db.Entities.Ride", "Ride")
                         .WithMany("Passengers")

@@ -25,11 +25,6 @@ namespace ShareCar.Db
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<RideRequest>()
     .HasKey(x => x.RideRequestId);
-            modelBuilder.Entity<Passenger>()
-                .HasKey(x => new { x.Email, x.RideId });
-            modelBuilder.Entity<Route>()
-                .HasIndex(u => u.Geometry)
-                .IsUnique();
 
             modelBuilder.Entity<Ride>()
                 .Property(x => x.NumberOfSeats)

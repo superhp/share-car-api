@@ -21,7 +21,7 @@ namespace ShareCar.Dto
         public List<PassengerDto> Passengers { get; set; }
         public int NumberOfSeats { get; set; }
         public bool isActive { get; set; }
-
+        public bool Finished { get; set; }
 
     }
 }
