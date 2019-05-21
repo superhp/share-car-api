@@ -55,6 +55,11 @@ namespace ShareCar.Logic.RideRequest_Logic
         {
             var ride = _rideLogic.GetRideById(requestDto.RideId);
 
+            if (ride.DriverEmail == requestDto.PassengerEmail)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             if (ride == null)
             {
                 throw new RideNoLongerExistsException();
