@@ -70,6 +70,11 @@ namespace ShareCar.Logic.RideRequest_Logic
                 throw new NoSeatsInRideException();
             }
 
+            if (ride.RideDateTime < DateTime.Now)
+            {
+                throw new ArgumentException();
+            }
+
             if (_rideLogic.IsRideRequested(requestDto.RideId, requestDto.PassengerEmail))
             {
                 throw new AlreadyRequestedException();

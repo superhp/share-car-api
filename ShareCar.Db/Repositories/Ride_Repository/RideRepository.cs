@@ -78,7 +78,7 @@ namespace ShareCar.Db.Repositories.Ride_Repository
 
         public IEnumerable<Ride> GetRidesByRoute(int routeId)
         {
-            return _databaseContext.Rides.Where(x => x.RouteId == routeId && x.isActive == true);
+            return _databaseContext.Rides.Where(x => x.RouteId == routeId && x.isActive && x.RideDateTime > DateTime.Now);
         }
 
         public bool IsRideRequested(int rideId, string passengerEmail)

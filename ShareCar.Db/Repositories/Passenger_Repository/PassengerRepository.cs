@@ -18,7 +18,7 @@ namespace ShareCar.Db.Repositories.Passenger_Repository
         public int GetUsersPoints(string email)
         {
             int points = _databaseContext.Passengers
-                .Join(_databaseContext.Rides.Where(x => ((x.RideDateTime.Month == DateTime.Now.Month) && (x.DriverEmail == email))),
+                .Join(_databaseContext.Rides.Where(x => ((x.RideDateTime.Month == DateTime.Now.Month && x.RideDateTime.Year == DateTime.Now.Year) && (x.DriverEmail == email))),
                 x => x.RideId,
                 y => y.RideId,
                 (x, y) => x).Where(z => z.Completed == true).Count();

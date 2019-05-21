@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using ShareCar.Db.Entities;
 using ShareCar.Db.Repositories.Route_Repository;
 using ShareCar.Dto;
@@ -58,12 +59,12 @@ namespace ShareCar.Logic.Route_Logic
 
             foreach (var route in entityRoutes)
             {
-                var drivers = route.Rides.Select(x => x.DriverEmail).Distinct().ToList();
+                var drivers = route.Rides.Where(x => x.RideDateTime > DateTime.Now).Select(x => x.DriverEmail).Distinct().ToList();
                 if (drivers.Count() == 1 && drivers.SingleOrDefault(x => x == email) != null)
                 {
                     continue;
                 }
-
+                    
                 RouteDto mappedRoute = _mapper.Map<Route, RouteDto>(route);
                     mappedRoute.FromId = route.FromId;
                     mappedRoute.ToId = route.ToId;
