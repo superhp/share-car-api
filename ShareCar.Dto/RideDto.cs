@@ -8,6 +8,7 @@ namespace ShareCar.Dto
     {
         public int RideId { get; set; }
         public int RouteId { get; set; }
+        public bool Requested { get; set; }
         public RouteDto Route { get; set; }
         public string DriverEmail { get; set; }
         public string DriverFirstName { get; set; }
@@ -20,7 +21,7 @@ namespace ShareCar.Dto
         public List<PassengerDto> Passengers { get; set; }
         public int NumberOfSeats { get; set; }
         public bool isActive { get; set; }
-
+        public bool Finished { get; set; }
 
     }
 }

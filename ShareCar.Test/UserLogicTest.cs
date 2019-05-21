@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
 using ShareCar.Db.Entities;
@@ -18,11 +19,12 @@ namespace ShareCar.Test
         Mock<IUserRepository> userRepository = new Mock<IUserRepository>();
         Mock<IPassengerLogic> passengerLogic = new Mock<IPassengerLogic>();
         Mock<IMapper> mapper = new Mock<IMapper>();
+        Mock<IHttpContextAccessor> httpContext = new Mock<IHttpContextAccessor>();
 
         [Test]
         public void GetWinnerBoard_10Users_Returns5HighestScoores()
         {
-            var userLogic = new UserLogic(userRepository.Object, passengerLogic.Object, mapper.Object);
+            var userLogic = new UserLogic(httpContext.Object, userRepository.Object, passengerLogic.Object, mapper.Object);
 
             List<User> allUsers = new List<User> {
                 new User{Email = "1"},

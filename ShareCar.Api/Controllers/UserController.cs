@@ -76,7 +76,7 @@ namespace ShareCar.Api.Controllers
                 return BadRequest();
             }
 
-            await _userLogic.UpdateUserAsync(user, User);
+            await _userLogic.UpdateUserAsync(user);
             return Ok();
         }
 
