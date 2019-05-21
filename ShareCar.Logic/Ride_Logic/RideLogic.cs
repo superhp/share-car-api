@@ -16,6 +16,7 @@ using ShareCar.Logic.User_Logic;
 using ShareCar.Logic.Note_Logic;
 using ShareCar.Dto.Identity;
 using Microsoft.EntityFrameworkCore.Internal;
+using ShareCar.Logic.Exceptions;
 
 namespace ShareCar.Logic.Ride_Logic
 {
@@ -52,14 +53,6 @@ namespace ShareCar.Logic.Ride_Logic
             return _mapper.Map<Ride, RideDto>(ride);
         }
 
-        public IEnumerable<RideDto> GetRidesByDate(DateTime date)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByDate(date);
-
-
-            return MapToList(rides);
-        }
-
         public IEnumerable<RideDto> GetRidesByDriver(string email)
         {
             IEnumerable<Ride> rides = _rideRepository.GetRidesByDriver(email);
@@ -91,27 +84,18 @@ namespace ShareCar.Logic.Ride_Logic
                 dtoRide.Route = _routeLogic.GetRouteById(ride.RouteId);
                 dtoRide.Route.Rides = null;
                 var note = notes.FirstOrDefault(x => x.RideId == ride.RideId);
-                if(note != null)
+                if (note != null)
                 {
                     dtoRide.Note = note.Text;
+                }
+                if (ride.RideDateTime < DateTime.Now.AddHours(-1))
+                {
+                    dtoRide.Finished = true;
                 }
                 dtoRide.Passengers = passengers.Where(x => x.RideId == ride.RideId).ToList();
                 dtoRides.Add(dtoRide);
             }
-            dtoRides = dtoRides.OrderByDescending(x => x.RideDateTime).ToList();
-            return dtoRides;
-        }
-
-        public IEnumerable<RideDto> GetRidesByStartPoint(int addressFromId)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByStartPoint(addressFromId);
-            return MapToList(rides);
-        }
-
-        public IEnumerable<RideDto> GetRidesByDestination(int addressToId)
-        {
-            IEnumerable<Ride> rides = _rideRepository.GetRidesByDestination(addressToId);
-            return MapToList(rides);
+            return dtoRides.OrderBy(x => x, new CustomComparer()).ToList();
         }
 
         public IEnumerable<PassengerDto> GetPassengersByRideId(int id)
@@ -123,11 +107,16 @@ namespace ShareCar.Logic.Ride_Logic
 
         public void AddRide(RideDto ride, string email)
         {
+            if(ride.RideDateTime < DateTime.Now)
+            {
+                throw new RideInPastException();
+            }
+
             ride.DriverEmail = email;
             ride.Requests = new List<RideRequestDto>();
             AddRouteIdToRide(ride);
             var entity = _rideRepository.AddRide(_mapper.Map<RideDto, Ride>(ride));
-            
+
             var note = _driverNoteLogic.AddNote(new DriverNoteDto { Text = ride.Note, RideId = entity.RideId });
             ride.DriverNoteId = note.DriverNoteId;
         }
@@ -135,22 +124,6 @@ namespace ShareCar.Logic.Ride_Logic
         public void SetRideAsInactive(RideDto rideDto)
         {
             _rideRepository.SetRideAsInactive(_mapper.Map<RideDto, Ride>(rideDto));
-        }
-
-        public bool DoesUserBelongsToRide(string email, int rideId)
-        {
-            Ride ride = _rideRepository.GetRideById(rideId);
-
-            if (ride == null)
-            {
-                return false;
-            }
-
-            if (ride.DriverEmail == email || ride.Passengers.Any(x => x.Email == email))
-            {
-                return true;
-            }
-            return false;
         }
 
         // Returns a list of mapped objects
@@ -174,14 +147,6 @@ namespace ShareCar.Logic.Ride_Logic
                 DtoPassengers.Add(_mapper.Map<Passenger, PassengerDto>(passenger));
             }
             return DtoPassengers;
-        }
-
-        public IEnumerable<RideDto> GetSimilarRides(RideDto ride)
-        {
-            string driverEmail = ride.DriverEmail;
-            int routeId = ride.RouteId;
-            IEnumerable<Ride> rides = _rideRepository.GetSimmilarRides(driverEmail, routeId, ride.RideId);
-            return MapToList(rides);
         }
 
         private void AddRouteIdToRide(RideDto ride)
@@ -214,7 +179,7 @@ namespace ShareCar.Logic.Ride_Logic
             List<RouteDto> routes = _routeLogic.GetRoutes(routeDto, email);
             foreach (RouteDto route in routes)
             {
-                AddDriversNamesToRouteRides(route.Rides);
+                AddDriversNamesToRides(route.Rides);
             }
             return routes;
 
@@ -224,7 +189,6 @@ namespace ShareCar.Logic.Ride_Logic
         {
             List<PassengerDto> passengers = _passengerLogic.GetUnrepondedPassengersByEmail(passengerEmail);
 
-            //    IEnumerable<Ride> entityRides = _rideRepository.FindRidesByPassenger(_mapper.Map<PassengerDto,Passenger>(passengers));
             List<RideDto> dtoRides = new List<RideDto>();
             DateTime hourAfterRide = new DateTime();
             hourAfterRide = DateTime.Now;
@@ -248,7 +212,7 @@ namespace ShareCar.Logic.Ride_Logic
             return dtoRides;
         }
 
-        public bool AddDriversNamesToRouteRides(List<RideDto> dtoRides)
+        public bool AddDriversNamesToRides(List<RideDto> dtoRides)
         {
             List<string> emails = new List<string>();
             List<string> FirstNames = new List<string>();
@@ -278,15 +242,23 @@ namespace ShareCar.Logic.Ride_Logic
             return true;
         }
 
-        public IEnumerable<RideDto> GetRidesByRoute(string routeGeometry)
+        public IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail)
         {
-            IEnumerable<Ride> entityRides = _rideRepository.GetRidesByRoute(routeGeometry);
+            IEnumerable<Ride> entityRides = _rideRepository.GetRidesByRoute(routeId);
 
             List<RideDto> dtoRides = (List<RideDto>)MapToList(entityRides);
 
-            AddDriversNamesToRouteRides(dtoRides);
+            AddDriversNamesToRides(dtoRides);
 
-            return dtoRides;
+            foreach (var ride in dtoRides)
+            {
+                if (IsRideRequested(ride.RideId, passengerEmail))
+                {
+                    ride.Requested = true;
+                }
+            }
+
+            return dtoRides.OrderBy(x => x.RideDateTime);
         }
 
         public void UpdateRide(RideDto ride)
@@ -298,5 +270,74 @@ namespace ShareCar.Logic.Ride_Logic
         {
             return _rideRepository.IsRideRequested(rideId, email);
         }
+        public bool IsDriver(int rideId, string email)
+        {
+            var ride = _rideRepository.GetRideById(rideId);
+            if (ride.DriverEmail != email)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool IsPassenger(int rideId, string email)
+        {
+            var passengers = GetPassengersByRideId(rideId).Select(x => x.Email);
+            if (!passengers.Contains(email))
+            {
+                return false;
+            }
+            return true;
+        }
+
     }
-}
+
+    class ComparerArgument
+    {
+        public bool Finished { get; set; }
+        public DateTime RideDate { get; set; }
+    }
+
+    class CustomComparer : IComparer<object>
+    {
+        public int Compare(object x, object y)
+        {
+            RideDto ride1 = (RideDto)x;
+            RideDto ride2 = (RideDto)y;
+
+
+            if (ride1.Finished && !ride2.Finished)
+            {
+                return 1;
+
+            }
+            if (ride2.Finished && !ride1.Finished)
+            {
+                return -1;
+
+            }
+            if (ride1.Finished && ride2.Finished)
+            {
+                if(ride1.RideDateTime < ride2.RideDateTime)
+                {
+                    return 1;
+                }
+                if (ride1.RideDateTime > ride2.RideDateTime)
+                {
+                    return -1;
+                }
+                return 0;
+            }
+            
+                if (ride1.RideDateTime > ride2.RideDateTime)
+                {
+                    return 1;
+                }
+                if (ride1.RideDateTime < ride2.RideDateTime)
+                {
+                    return -1;
+                }
+                return 0;
+        }
+    }
+    }

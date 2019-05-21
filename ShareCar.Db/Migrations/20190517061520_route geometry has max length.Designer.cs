@@ -12,9 +12,10 @@ using System;
 namespace ShareCar.Db.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190517061520_route geometry has max length")]
+    partial class routegeometryhasmaxlength
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,20 +190,17 @@ namespace ShareCar.Db.Migrations
 
             modelBuilder.Entity("ShareCar.Db.Entities.Passenger", b =>
                 {
-                    b.Property<int>("PassengerId")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Completed");
-
                     b.Property<string>("Email");
-
-                    b.Property<bool>("PassengerResponded");
 
                     b.Property<int>("RideId");
 
-                    b.HasKey("PassengerId");
+                    b.Property<bool>("Completed");
 
-                    b.HasIndex("Email");
+                    b.Property<int>("PassengerId");
+
+                    b.Property<bool>("PassengerResponded");
+
+                    b.HasKey("Email", "RideId");
 
                     b.HasIndex("RideId");
 
@@ -302,6 +300,10 @@ namespace ShareCar.Db.Migrations
                     b.HasKey("RouteId");
 
                     b.HasIndex("FromId");
+
+                    b.HasIndex("Geometry")
+                        .IsUnique()
+                        .HasFilter("[Geometry] IS NOT NULL");
 
                     b.HasIndex("ToId");
 
@@ -475,7 +477,8 @@ namespace ShareCar.Db.Migrations
                 {
                     b.HasOne("ShareCar.Db.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("Email");
+                        .HasForeignKey("Email")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ShareCar.Db.Entities.Ride", "Ride")
                         .WithMany("Passengers")

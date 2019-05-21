@@ -16,6 +16,8 @@ using System.Linq;
 using ShareCar.Logic.Exceptions;
 using ShareCar.Logic.Note_Logic;
 using ShareCar.Db.Repositories.Notes_Repository;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ShareCar.Logic.RideRequest_Logic
 {
@@ -32,8 +34,8 @@ namespace ShareCar.Logic.RideRequest_Logic
         private readonly IRideRequestNoteLogic _rideRequestNoteLogic;
         private readonly IDriverNoteLogic _driverNoteLogic;
         private readonly IDriverSeenNoteRepository _driverSeenNoteReposiotory;
-
-        public RideRequestLogic(IDriverNoteLogic driverNoteLogic, IDriverSeenNoteRepository driverSeenNoteLogic, IRideRequestRepository rideRequestRepository, IRideRequestNoteLogic rideRequestNoteLogic, IAddressLogic addressLogic, IUserLogic userLogic, IMapper mapper, IPassengerLogic passengerLogic, IRideLogic rideLogic, IRouteLogic routeLogic)
+        private readonly ClaimsPrincipal _user;
+        public RideRequestLogic(IHttpContextAccessor httpContext, IDriverNoteLogic driverNoteLogic, IDriverSeenNoteRepository driverSeenNoteLogic, IRideRequestRepository rideRequestRepository, IRideRequestNoteLogic rideRequestNoteLogic, IAddressLogic addressLogic, IUserLogic userLogic, IMapper mapper, IPassengerLogic passengerLogic, IRideLogic rideLogic, IRouteLogic routeLogic)
         {
             _rideRequestRepository = rideRequestRepository;
             _addressLogic = addressLogic;
@@ -45,20 +47,12 @@ namespace ShareCar.Logic.RideRequest_Logic
             _rideRequestNoteLogic = rideRequestNoteLogic;
             _driverNoteLogic = driverNoteLogic;
             _driverSeenNoteReposiotory = driverSeenNoteLogic;
+            _user = httpContext.HttpContext.User;
+
         }
 
-        public void AddRequest(RideRequestDto requestDto, string driverEmail)
+        public void AddRequest(RideRequestDto requestDto)
         {
-            requestDto.SeenByDriver = false;
-            requestDto.SeenByPassenger = true;
-            requestDto.DriverEmail = driverEmail;
-            int addressId = _addressLogic.GetAddressId(requestDto.Address);
-
-            if(addressId == -1)
-            {
-                throw new ArgumentException("Failed to get address id");
-            }
-
             var ride = _rideLogic.GetRideById(requestDto.RideId);
 
             if (ride == null)
@@ -76,6 +70,16 @@ namespace ShareCar.Logic.RideRequest_Logic
                 throw new AlreadyRequestedException();
             }
 
+            requestDto.SeenByDriver = false;
+            requestDto.SeenByPassenger = true;
+            requestDto.DriverEmail = ride.DriverEmail;
+            int addressId = _addressLogic.GetAddressId(requestDto.Address);
+
+            if(addressId == -1)
+            {
+                throw new ArgumentException("Failed to get address id");
+            }
+
             requestDto.AddressId = addressId;
            var entity = _rideRequestRepository.AddRequest(_mapper.Map<RideRequestDto, RideRequest>(requestDto));
 
@@ -90,14 +94,44 @@ namespace ShareCar.Logic.RideRequest_Logic
             }
         }
 
-        public void UpdateRequest(RideRequestDto request)
+        public void UpdateRequest(RideRequestDto request,string userEmail)
         {
             var entityRequest = _rideRequestRepository.GetRequestById(request.RideRequestId);
             var previousStatus = _mapper.Map<Db.Entities.Status, Dto.Status>(entityRequest.Status);
 
+            if (entityRequest.DriverEmail != userEmail && entityRequest.PassengerEmail != userEmail)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var driver = userEmail == entityRequest.DriverEmail;
+
+            if (driver)
+            {
+                if(request.Status == Dto.Status.WAITING || 
+                    request.Status == Dto.Status.CANCELED ||
+                    previousStatus == Dto.Status.CANCELED ||
+                    previousStatus == Dto.Status.DELETED ||
+                    previousStatus == Dto.Status.DENIED ||
+                    (previousStatus == Dto.Status.ACCEPTED && request.Status == Dto.Status.DENIED))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            else
+            {
+                if (previousStatus != Dto.Status.WAITING ||
+                    request.Status == Dto.Status.ACCEPTED ||
+                    request.Status == Dto.Status.DENIED || 
+                    request.Status == Dto.Status.DELETED)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+
             if(request.Status == previousStatus)
             {
-                return; // Should exception be thrown ? This is unexpected behavior, though returning prevents any undesired consequences
+                return;
             }
 
             if (request.Status == Dto.Status.CANCELED)
@@ -262,5 +296,10 @@ namespace ShareCar.Logic.RideRequest_Logic
             return converted.OrderByDescending(x => !x.SeenByPassenger).ThenByDescending(x => x.Status == Dto.Status.WAITING).ThenByDescending(x => x.Status == Dto.Status.ACCEPTED).ToList();
         }
 
+        public bool IsRequester(int rideRequestId, string email)
+        {
+            var request = _rideRequestRepository.GetRequestById(rideRequestId);
+            return request.PassengerEmail == email;
+        }
     }
 }

@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using ShareCar.Db.Entities;
 using ShareCar.Db.Repositories;
 using ShareCar.Db.Repositories.User_Repository;
@@ -23,12 +24,14 @@ namespace ShareCar.Logic.User_Logic
         private readonly IUserRepository _userRepository;
         private readonly IPassengerLogic _passengerLogic;
         private readonly IMapper _mapper;
+        private readonly ClaimsPrincipal _user;
 
-        public UserLogic(IUserRepository userRepository, IPassengerLogic passengerLogic, IMapper mapper)
+        public UserLogic(IHttpContextAccessor httpContext, IUserRepository userRepository, IPassengerLogic passengerLogic, IMapper mapper)
         {
             _userRepository = userRepository;
             _passengerLogic = passengerLogic;
             _mapper = mapper;
+            _user = httpContext.HttpContext.User;
 
         }
 
@@ -53,9 +56,9 @@ namespace ShareCar.Logic.User_Logic
             return dtoUsers;
         }
 
-        public async Task UpdateUserAsync(UserDto updatedUser, ClaimsPrincipal User)
+        public async Task UpdateUserAsync(UserDto updatedUser)
         {
-            var _userToUpdate = await _userRepository.GetLoggedInUser(User);
+            var _userToUpdate = await _userRepository.GetLoggedInUser(_user);
              
             if (_userToUpdate != null)
             {
@@ -67,8 +70,8 @@ namespace ShareCar.Logic.User_Logic
                 _userToUpdate.NumberOfSeats = updatedUser.NumberOfSeats;
                 _userToUpdate.LicensePlate = updatedUser.LicensePlate;
 
-                var _user = MapToEntity(_userToUpdate);
-                await _userRepository.UpdateUserAsync(_user, User);
+                var entityUser = MapToEntity(_userToUpdate);
+                await _userRepository.UpdateUserAsync(entityUser, _user);
             }
 
         }
