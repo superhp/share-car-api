@@ -55,13 +55,21 @@ namespace ShareCar.Logic.Route_Logic
             var entityRoutes = _routeRepository.GetRoutes(isFromOffice, address).ToList();
 
             List<RouteDto> dtoRoutes = new List<RouteDto>();
+
             foreach (var route in entityRoutes)
             {
+                var drivers = route.Rides.Select(x => x.DriverEmail).Distinct().ToList();
+                if (drivers.Count() == 1 && drivers.SingleOrDefault(x => x == email) != null)
+                {
+                    continue;
+                }
+
                 RouteDto mappedRoute = _mapper.Map<Route, RouteDto>(route);
-                mappedRoute.FromId = route.FromId;
-                mappedRoute.ToId = route.ToId;
-                mappedRoute.Drivers = route.Rides.Select(x => x.DriverEmail).Distinct().ToList();
-                dtoRoutes.Add(mappedRoute);
+                    mappedRoute.FromId = route.FromId;
+                    mappedRoute.ToId = route.ToId;
+                    mappedRoute.Drivers = drivers;
+                    dtoRoutes.Add(mappedRoute);
+                
             }
             return dtoRoutes;
         }

@@ -30,7 +30,7 @@ namespace ShareCar.Logic.Identity_Logic
         public async Task<string> Login(GoogleUserDataDto userInfo)
         {
 
-            var user = _userRepository.GetUserByEmail(Dto.EmailType.LOGIN, userInfo.Email);
+            var user = _userRepository.GetUserByEmail(Dto.EmailType.GOOGLE, userInfo.Email);
 
             if (user != null)
             {

@@ -76,7 +76,7 @@ namespace ShareCar.Logic.Identity_Logic
             var userInfo = await GetUserFromFacebook(accessToken);
             // ready to create the local user account (if necessary) and jwt
 
-            var user = _userRepository.GetUserByEmail(EmailType.LOGIN, userInfo.Email);
+            var user = _userRepository.GetUserByEmail(EmailType.FACEBOOK, userInfo.Email);
 
             if (user != null)
             {
