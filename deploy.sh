@@ -5,6 +5,9 @@
 # Version: 1.0.13
 # ----------------------
 
+# Helpers
+# -------
+
 exitWithMessageOnError () {
   if [ ! $? -eq 0 ]; then
     echo "An error has occurred during web site deployment."
