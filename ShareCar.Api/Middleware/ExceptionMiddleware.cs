@@ -2,6 +2,7 @@
 using ShareCar.Logic.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -28,6 +29,8 @@ namespace ShareCar.Api.Middleware
             }
             catch (Exception ex)
             {
+                Trace.WriteLine(ex);
+
                 _logger.Error(ex);
 
                 if (ex is UnauthorizedAccessException)
