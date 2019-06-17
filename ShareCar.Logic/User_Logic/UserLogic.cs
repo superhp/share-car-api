@@ -14,6 +14,7 @@ using ShareCar.Db.Repositories.User_Repository;
 using ShareCar.Dto;
 using ShareCar.Dto.Identity;
 using ShareCar.Dto.Identity.Cognizant;
+using ShareCar.Logic.Address_Logic;
 using ShareCar.Logic.ObjectMapping;
 using ShareCar.Logic.Passenger_Logic;
 
@@ -24,22 +25,28 @@ namespace ShareCar.Logic.User_Logic
         private readonly IUserRepository _userRepository;
         private readonly IPassengerLogic _passengerLogic;
         private readonly IMapper _mapper;
+        private readonly IAddressLogic _addressLogic;
         private readonly ClaimsPrincipal _user;
 
-        public UserLogic(IHttpContextAccessor httpContext, IUserRepository userRepository, IPassengerLogic passengerLogic, IMapper mapper)
+        public UserLogic(IHttpContextAccessor httpContext, IUserRepository userRepository, IPassengerLogic passengerLogic, IMapper mapper, IAddressLogic addressLogic)
         {
             _userRepository = userRepository;
             _passengerLogic = passengerLogic;
             _mapper = mapper;
             _user = httpContext.HttpContext.User;
-
+            _addressLogic = addressLogic;
         }
 
-        public async Task<UserDto> GetUserAsync(ClaimsPrincipal principal)
+        public async Task<UserDto> GetLoggedInUser()
         {
-            var user = await _userRepository.GetLoggedInUser(principal);
-            return user;
-            
+            var user = await _userRepository.GetLoggedInUser(_user);
+            var userDto = _mapper.Map<User, UserDto>(user);
+
+            if (user.HomeAddressId.HasValue)
+            {
+                userDto.HomeAddress = _addressLogic.GetAddressById(user.HomeAddressId.Value);
+            }
+            return userDto;
         }
 
         public IEnumerable<UserDto> GetAllUsers()
@@ -50,28 +57,26 @@ namespace ShareCar.Logic.User_Logic
 
             foreach(var user in users)
             {
-                dtoUsers.Add(MapToDto(user));
+                dtoUsers.Add(_mapper.Map<User, UserDto>(user));
             }
 
             return dtoUsers;
         }
+        public void UpdateHomeAddress(AddressDto address, string userEmail)
+        {
+            var entityUser = _userRepository.GetUserByEmail(EmailType.LOGIN, userEmail);
+            entityUser.HomeAddress = _mapper.Map<AddressDto,Address>(address);
+            _userRepository.UpdateUser(entityUser);
+        }
 
         public async Task UpdateUserAsync(UserDto updatedUser)
         {
-            var _userToUpdate = await _userRepository.GetLoggedInUser(_user);
+            var _userToUpdate = await GetLoggedInUser();
              
             if (_userToUpdate != null)
             {
-                _userToUpdate.FirstName = updatedUser.FirstName;
-                _userToUpdate.LastName = updatedUser.LastName;
-                _userToUpdate.Phone = updatedUser.Phone;
-                _userToUpdate.CarModel = updatedUser.CarModel;
-                _userToUpdate.CarColor = updatedUser.CarColor;
-                _userToUpdate.NumberOfSeats = updatedUser.NumberOfSeats;
-                _userToUpdate.LicensePlate = updatedUser.LicensePlate;
-
-                var entityUser = MapToEntity(_userToUpdate);
-                await _userRepository.UpdateUserAsync(entityUser, _user);
+                var entityUser = _mapper.Map<UserDto, User>(updatedUser);
+                _userRepository.UpdateUser(entityUser);
             }
 
         }
@@ -91,7 +96,7 @@ namespace ShareCar.Logic.User_Logic
                 int userPoints = CountPoints(user.Email);
                 if (userPoints > 0)
                 {
-                    userWithPoints.Add(new Tuple<UserDto, int>(MapToDto(user), userPoints));
+                    userWithPoints.Add(new Tuple<UserDto, int>(_mapper.Map<User, UserDto>(user), userPoints));
                 }
             }
 
@@ -123,7 +128,7 @@ namespace ShareCar.Logic.User_Logic
 
         public Task CreateUser(UserDto userDto)
         {
-            return _userRepository.CreateUser(MapToEntity(userDto));
+            return _userRepository.CreateUser(_mapper.Map<UserDto, User>(userDto));
         }
 
         public void CreateUnauthorizedUser(UnauthorizedUserDto userDto)
@@ -206,7 +211,7 @@ namespace ShareCar.Logic.User_Logic
                 return null;
             }
 
-            return MapToDto(user);
+            return _mapper.Map<User, UserDto>(user);
         }
 
         public bool DoesUserExist(EmailType type, string cognizantEmail)
@@ -235,47 +240,6 @@ namespace ShareCar.Logic.User_Logic
                 }
             }
             return false;
-
-        }
-
-        private UserDto MapToDto(User user)
-        {
-            return new UserDto
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FacebookEmail = user.FacebookEmail,
-                FacebookVerified = user.FacebookVerified,
-                GoogleEmail = user.GoogleEmail,
-                GoogleVerified = user.GoogleVerified,
-                CognizantEmail = user.CognizantEmail,
-                Email = user.Email,
-                LicensePlate = user.LicensePlate,
-                Phone = user.Phone,
-                CarModel = user.CarModel,
-                CarColor = user.CarColor,
-                NumberOfSeats = user.NumberOfSeats
-            };
-        }
-
-        private User MapToEntity(UserDto user)
-        {
-            return new User
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FacebookEmail = user.FacebookEmail,
-                FacebookVerified = user.FacebookVerified,
-                GoogleEmail = user.GoogleEmail,
-                GoogleVerified = user.GoogleVerified,
-                CognizantEmail = user.CognizantEmail,
-                Email = user.Email,
-                LicensePlate = user.LicensePlate,
-                Phone = user.Phone,
-                CarModel = user.CarModel,
-                CarColor = user.CarColor,
-                NumberOfSeats = user.NumberOfSeats
-            };
         }
 
         public int GetPoints(string userEmail)
@@ -289,7 +253,7 @@ namespace ShareCar.Logic.User_Logic
             var dtoDrivers = new List<UserDto>();
             foreach(var driver in drivers)
             {
-                dtoDrivers.Add(MapToDto(driver));
+                dtoDrivers.Add(_mapper.Map<User, UserDto>(driver));
             }
             return dtoDrivers;
         }

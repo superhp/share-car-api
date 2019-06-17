@@ -13,6 +13,7 @@ using ShareCar.Db.Repositories.User_Repository;
 using ShareCar.Logic.Exceptions;
 using ShareCar.Logic.Note_Logic;
 using ShareCar.Db.Repositories.Notes_Repository;
+using ShareCar.Logic.User_Logic;
 
 namespace ShareCar.Api.Controllers
 {
@@ -23,14 +24,14 @@ namespace ShareCar.Api.Controllers
     {
         private readonly IRideRequestLogic _requestLogic;
         private readonly IRideRequestNoteLogic _requestNoteLogic;
-        private readonly IUserRepository _userRepository;
+        private readonly IUserLogic _userLogic;
         private readonly IRideLogic _rideLogic;
         private readonly IDriverSeenNoteRepository _driverSeenNoteRepository;
 
-        public RideRequestController(IRideRequestLogic requestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IUserRepository userRepository, IRideLogic rideLogic, IRideRequestNoteLogic noteLogic)
+        public RideRequestController(IRideRequestLogic requestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IUserLogic userLogic, IRideLogic rideLogic, IRideRequestNoteLogic noteLogic)
         {
             _requestLogic = requestLogic;
-            _userRepository = userRepository;
+            _userLogic = userLogic;
             _rideLogic = rideLogic;
             _requestNoteLogic = noteLogic;
             _driverSeenNoteRepository = driverSeenNoteRepository;
@@ -39,7 +40,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("passenger")]
         public async Task<IActionResult> GetPassengerRequests()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             IEnumerable<RideRequestDto> request = _requestLogic.GetPassengerRequests(userDto.Email);
 
@@ -77,7 +78,7 @@ namespace ShareCar.Api.Controllers
             {
                 return BadRequest();
             }
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             request.PassengerEmail = userDto.Email;
 
             _requestLogic.AddRequest(request);
@@ -108,7 +109,7 @@ namespace ShareCar.Api.Controllers
             {
                 return BadRequest();
             }
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             _requestLogic.UpdateRequest(request, userDto.Email);
 
@@ -117,7 +118,7 @@ namespace ShareCar.Api.Controllers
 
         private async Task ValidatePassengerAsync(int rideRequestId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             if (!_requestLogic.IsRequester(rideRequestId, userDto.Email))
             {
                 throw new UnauthorizedAccessException();

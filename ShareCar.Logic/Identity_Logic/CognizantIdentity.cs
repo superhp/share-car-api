@@ -92,9 +92,7 @@ namespace ShareCar.Logic.Identity_Logic
             msg.SetSubject("Verification code");
 
             msg.AddContent(MimeType.Text, "Your verification code is " + code.ToString());
-
-            var response = await _client.SendEmailAsync(msg);
-            var tt=0;
+                var response = await _client.SendEmailAsync(msg);
         }
     }
 }
