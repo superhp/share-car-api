@@ -16,6 +16,9 @@ namespace ShareCar.Dto
         public AddressDto ToAddress { get; set; }
         public int AddressFromId { get; set; }
         public int AddressToId { get; set; }
-        public List<string> Drivers { get; set; }
+        public string DriverFirstName { get; set; }
+        public string DriverLastName { get; set; }
+        public string DriverEmail { get; set; }
     }
+
 }
