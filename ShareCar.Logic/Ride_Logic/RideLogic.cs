@@ -177,10 +177,21 @@ namespace ShareCar.Logic.Ride_Logic
         public IEnumerable<RouteDto> GetRoutes(RouteDto routeDto, string email)
         {
             List<RouteDto> routes = _routeLogic.GetRoutes(routeDto, email);
-            foreach (RouteDto route in routes)
+            foreach (var route in routes)
             {
-                AddDriversNamesToRides(route.Rides);
+                foreach (var ride in route.Rides)
+                {
+                    if (IsRideRequested(ride.RideId, email))
+                    {
+                        ride.Requested = true;
+                    }
+                }
+                route.Rides.OrderBy(x => x.RideDateTime);
             }
+         //   foreach (RouteDto route in routes)
+         //   {
+         //       AddDriversNamesToRides(route.Rides);
+         //   }
             return routes;
 
         }
@@ -212,13 +223,13 @@ namespace ShareCar.Logic.Ride_Logic
             return dtoRides;
         }
 
-        public bool AddDriversNamesToRides(List<RideDto> dtoRides)
+        public bool AddDriversNamesToRides(List<RouteRideDto> dtoRides)
         {
-            List<string> emails = new List<string>();
+      /*      List<string> emails = new List<string>();
             List<string> FirstNames = new List<string>();
             List<string> LastNames = new List<string>();
             List<string> phones = new List<string>();
-            foreach (RideDto ride in dtoRides)
+            foreach (RouteRideDto ride in dtoRides)
             {
                 if (!emails.Contains(ride.DriverEmail))
                 {
@@ -238,7 +249,7 @@ namespace ShareCar.Logic.Ride_Logic
                     ride.DriverLastName = LastNames[index];
                     ride.DriverPhone = phones[index];
                 }
-            }
+            }*/
             return true;
         }
 
@@ -248,7 +259,7 @@ namespace ShareCar.Logic.Ride_Logic
 
             List<RideDto> dtoRides = (List<RideDto>)MapToList(entityRides);
 
-            AddDriversNamesToRides(dtoRides);
+          //  AddDriversNamesToRides(dtoRides);
 
             foreach (var ride in dtoRides)
             {

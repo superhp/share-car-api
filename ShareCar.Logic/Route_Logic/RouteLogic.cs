@@ -79,11 +79,14 @@ namespace ShareCar.Logic.Route_Logic
 
                 foreach(var driver in driverEmails)
                 {
-                    var user = _userLogic.GetUserByEmail(EmailType.LOGIN, driver);
-                    mappedRoute.DriverFirstName = user.FirstName;
-                    mappedRoute.DriverLastName = user.LastName;
-                    mappedRoute.DriverEmail = user.Email;
-                    dtoRoutes.Add(_mapper.Map<RouteDto, RouteDto>(mappedRoute));
+                    if (driver != email)
+                    {
+                        var user = _userLogic.GetUserByEmail(EmailType.LOGIN, driver);
+                        mappedRoute.DriverFirstName = user.FirstName;
+                        mappedRoute.DriverLastName = user.LastName;
+                        mappedRoute.DriverEmail = user.Email;
+                        dtoRoutes.Add(_mapper.Map<RouteDto, RouteDto>(mappedRoute));
+                    }
                 }
             }
             return dtoRoutes;

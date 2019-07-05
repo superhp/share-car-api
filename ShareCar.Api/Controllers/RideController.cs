@@ -126,17 +126,21 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpPut("disactivate")]
-        public async Task<IActionResult> SetRideAsInactive([FromBody] RideDto rideDto)
+        public async Task<IActionResult> SetRideAsInactive([FromBody] List<RideDto> rides)
         {
-            await ValidateDriverAsync(rideDto.RideId);
-            var userDto = await _userLogic.GetLoggedInUser();
-            if (rideDto == null)
+            foreach (var rideDto in rides)
             {
-                return BadRequest();
+                await ValidateDriverAsync(rideDto.RideId);
+
+                var userDto = await _userLogic.GetLoggedInUser();
+                if (rideDto == null)
+                {
+                    return BadRequest();
+                }
+                _passengerLogic.RemovePassengerByRide(rideDto.RideId);
+                _rideRequestLogic.DeletedRide(rideDto.RideId);
+                _rideLogic.SetRideAsInactive(rideDto);
             }
-            _passengerLogic.RemovePassengerByRide(rideDto.RideId);
-            _rideRequestLogic.DeletedRide(rideDto.RideId);
-            _rideLogic.SetRideAsInactive(rideDto);
             return Ok();
         }
 

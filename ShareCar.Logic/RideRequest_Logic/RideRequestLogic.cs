@@ -110,7 +110,6 @@ namespace ShareCar.Logic.RideRequest_Logic
             {
                 if(request.Status == Dto.Status.WAITING || 
                     request.Status == Dto.Status.CANCELED ||
-                    previousStatus == Dto.Status.CANCELED ||
                     previousStatus == Dto.Status.DELETED ||
                     previousStatus == Dto.Status.DENIED ||
                     (previousStatus == Dto.Status.ACCEPTED && request.Status == Dto.Status.DENIED))
@@ -120,10 +119,7 @@ namespace ShareCar.Logic.RideRequest_Logic
             }
             else
             {
-                if (previousStatus != Dto.Status.WAITING ||
-                    request.Status == Dto.Status.ACCEPTED ||
-                    request.Status == Dto.Status.DENIED || 
-                    request.Status == Dto.Status.DELETED)
+                if (request.Status != Dto.Status.CANCELED)
                 {
                     throw new UnauthorizedAccessException();
                 }

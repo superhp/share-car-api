@@ -54,16 +54,16 @@ namespace ShareCar.Logic.Passenger_Logic
 
             foreach (Passenger passenger in passengers)
             {
-                passenger.Ride.Requests = passenger.Ride.Requests.Where(x => x.PassengerEmail == passenger.Email && x.Status == Db.Entities.Status.ACCEPTED).ToList();
-                var dtoPassenger = _mapper.Map<Passenger, PassengerDto>(passenger);
-                var address = _addressLogic.GetAddressById(passenger.Ride.Requests[0].AddressId);
+              //  passenger.Ride.Requests = passenger.Ride.Requests.Where(x => x.PassengerEmail == passenger.Email && x.Status == Db.Entities.Status.ACCEPTED).ToList();
+              //  var dtoPassenger = _mapper.Map<Passenger, PassengerDto>(passenger);
+              //  var address = _addressLogic.GetAddressById(passenger.Ride.Requests[0].AddressId);
              //   var route = _routeLogic.GetRouteByRequest(passenger.Ride.Requests[0].RideRequestId);
-                dtoPassenger.Longitude = address.Longitude;
-                dtoPassenger.Latitude = address.Latitude;
+             //   dtoPassenger.Longitude = address.Longitude;
+             //   dtoPassenger.Latitude = address.Latitude;
           //    dtoPassenger.Route = route;
-                dtoPassenger.Ride = null;
-                dtoPassenger.Route.Rides = null;
-                dtoPassengers.Add(dtoPassenger);
+             //   dtoPassenger.Ride = null;
+          //      dtoPassenger.Route.Rides = null;
+              //  dtoPassengers.Add(dtoPassenger);
             }
             return dtoPassengers;
         }

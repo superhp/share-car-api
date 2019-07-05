@@ -40,6 +40,10 @@ namespace ShareCar.Logic.User_Logic
         public async Task<UserDto> GetLoggedInUser()
         {
             var user = await _userRepository.GetLoggedInUser(_user);
+            if(user == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
             var userDto = _mapper.Map<User, UserDto>(user);
 
             if (user.HomeAddressId.HasValue)

@@ -10,7 +10,7 @@ namespace ShareCar.Dto
         public int FromId { get; set; }
         public int ToId { get; set; }
         public string Geometry { get; set; }
-        public List<RideDto> Rides { get; set; }
+        public List<RouteRideDto> Rides { get; set; }
         public DateTime FromTime { get; set; }
         public AddressDto FromAddress { get; set; }
         public AddressDto ToAddress { get; set; }

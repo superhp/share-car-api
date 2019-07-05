@@ -47,7 +47,7 @@ namespace ShareCar.Api.Controllers
             return Ok(request);
         }
 
-        [HttpGet("{requestId}")]
+        [HttpGet("seenPassenger/{requestId}")]
         public async Task<IActionResult> DriverSeenNoteAsync(int requestId)
         {
             await ValidatePassengerAsync(requestId);
@@ -55,7 +55,7 @@ namespace ShareCar.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("{requestId}")]
+        [HttpGet("seenDriver/{requestId}")]
         public async Task<IActionResult> RequestNoteSeenAsync(int requestId)
         {
             await ValidatePassengerAsync(requestId);
@@ -103,16 +103,18 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateRequestsAsync([FromBody] RideRequestDto request)
+        public async Task<IActionResult> UpdateRequestsAsync([FromBody] List<RideRequestDto> requests)
         {
-            if (request == null)
+            if (requests.Count == 0)
             {
                 return BadRequest();
             }
             var userDto = await _userLogic.GetLoggedInUser();
 
-            _requestLogic.UpdateRequest(request, userDto.Email);
-
+            foreach (var request in requests)
+            {
+                _requestLogic.UpdateRequest(request, userDto.Email);
+            }
             return Ok();
         }
 
