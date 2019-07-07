@@ -48,6 +48,9 @@ namespace ShareCar.Logic.Address_Logic
             return _mapper.Map<Address, AddressDto>(address);
         }
 
-
+        public void UpdateAddress(AddressDto address)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using ShareCar.Db.Entities;
+using ShareCar.Dto;
+using ShareCar.Dto.Identity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using ShareCar.Db.Entities;
-using ShareCar.Dto;
-using ShareCar.Dto.Identity;
-using ShareCar.Dto.Identity.Facebook;
 
 namespace ShareCar.Db.Repositories.User_Repository
 {
@@ -49,41 +48,9 @@ namespace ShareCar.Db.Repositories.User_Repository
             return _databaseContext.Users;
         }
 
-        public async Task<UserDto> GetLoggedInUser(ClaimsPrincipal principal)
+        public async Task<User> GetLoggedInUser(ClaimsPrincipal principal)
         {
-            var user = await _userManager.GetUserAsync(principal);
-            if(user == null)
-            {
-                throw new UnauthorizedAccessException();
-            }
-            var userDto = new UserDto
-            {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PictureUrl = user.PictureUrl,
-                Phone = user.Phone,
-                LicensePlate = user.LicensePlate,
-                CarColor = user.CarColor,
-                CarModel = user.CarModel,
-                NumberOfSeats = user.NumberOfSeats
-            };
-
-            return userDto;
-        }
-
-        public async Task<IdentityResult> UpdateUserAsync(User user, ClaimsPrincipal principal)
-        {
-            var _user = await _userManager.GetUserAsync(principal);
-            _user.FirstName = user.FirstName;
-            _user.LastName = user.LastName;
-            _user.Phone = user.Phone;
-            _user.CarModel = user.CarModel;
-            _user.CarColor = user.CarColor;
-            _user.NumberOfSeats = user.NumberOfSeats != 0 ? user.NumberOfSeats : _user.NumberOfSeats;
-            _user.LicensePlate = user.LicensePlate;
-            var userAsync = await _userManager.UpdateAsync(_user);
-            return userAsync;
+            return await _userManager.GetUserAsync(principal);
         }
 
         public UnauthorizedUser GetUnauthorizedUser(string email)
@@ -100,15 +67,23 @@ namespace ShareCar.Db.Repositories.User_Repository
 
         public void UpdateUser(User user)
         {
-                var toUpdate = _databaseContext.User.Single(x => x.Email == user.Email);
+            var toUpdate = _databaseContext.User.Single(x => x.Email == user.Email);
 
-                toUpdate.FacebookEmail = user.FacebookEmail;
-                toUpdate.GoogleEmail = user.GoogleEmail;
-                toUpdate.FacebookVerified = user.FacebookVerified;
-                toUpdate.GoogleVerified = user.GoogleVerified;
-                toUpdate.CognizantEmail = user.CognizantEmail;
-                _databaseContext.SaveChanges();
-
+            toUpdate.FacebookEmail = user.FacebookEmail;
+            toUpdate.GoogleEmail = user.GoogleEmail;
+            toUpdate.FacebookVerified = user.FacebookVerified;
+            toUpdate.GoogleVerified = user.GoogleVerified;
+            toUpdate.CognizantEmail = user.CognizantEmail;
+            toUpdate.FirstName = user.FirstName;
+            toUpdate.LastName = user.LastName;
+            toUpdate.Phone = user.Phone;
+            toUpdate.CarModel = user.CarModel;
+            toUpdate.CarColor = user.CarColor;
+            toUpdate.NumberOfSeats = user.NumberOfSeats;
+            toUpdate.LicensePlate = user.LicensePlate;
+            toUpdate.HomeAddress = user.HomeAddress;
+            toUpdate.HomeAddressId = user.HomeAddressId;
+            _databaseContext.SaveChanges();
         }
 
         public void DeleteUser(string email)

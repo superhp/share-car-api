@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ShareCar.Db.Entities;
 using ShareCar.Db.Repositories.User_Repository;
 using ShareCar.Dto.Identity;
+using ShareCar.Logic.Address_Logic;
 using ShareCar.Logic.Passenger_Logic;
 using ShareCar.Logic.User_Logic;
 using System;
@@ -18,13 +19,14 @@ namespace ShareCar.Test
     {
         Mock<IUserRepository> userRepository = new Mock<IUserRepository>();
         Mock<IPassengerLogic> passengerLogic = new Mock<IPassengerLogic>();
+        Mock<IAddressLogic> addressLogic = new Mock<IAddressLogic>();
         Mock<IMapper> mapper = new Mock<IMapper>();
         Mock<IHttpContextAccessor> httpContext = new Mock<IHttpContextAccessor>();
 
         [Test]
         public void GetWinnerBoard_10Users_Returns5HighestScoores()
         {
-            var userLogic = new UserLogic(httpContext.Object, userRepository.Object, passengerLogic.Object, mapper.Object);
+            var userLogic = new UserLogic(httpContext.Object, userRepository.Object, passengerLogic.Object, mapper.Object, addressLogic.Object);
 
             List<User> allUsers = new List<User> {
                 new User{Email = "1"},

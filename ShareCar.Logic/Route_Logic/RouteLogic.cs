@@ -1,9 +1,9 @@
-﻿using System;
-using AutoMapper;
+﻿using AutoMapper;
 using ShareCar.Db.Entities;
 using ShareCar.Db.Repositories.Route_Repository;
 using ShareCar.Dto;
 using ShareCar.Logic.Address_Logic;
+using ShareCar.Logic.User_Logic;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,14 +12,16 @@ namespace ShareCar.Logic.Route_Logic
     public class RouteLogic : IRouteLogic
     {
         private readonly IMapper _mapper;
+        private readonly IUserLogic _userLogic;
         private readonly IRouteRepository _routeRepository;
         private readonly IAddressLogic _addressLogic;
 
-        public RouteLogic(IRouteRepository routeRepository, IMapper mapper, IAddressLogic addressLogic)
+        public RouteLogic(IRouteRepository routeRepository, IMapper mapper, IAddressLogic addressLogic, IUserLogic userLogic)
         {
             _routeRepository = routeRepository;
             _mapper = mapper;
             _addressLogic = addressLogic;
+            _userLogic = userLogic;
         }
 
         public int GetRouteId(string geometry)
@@ -44,33 +46,48 @@ namespace ShareCar.Logic.Route_Logic
         // Returns routes by passengers criteria
         public List<RouteDto> GetRoutes(RouteDto routeDto, string email)
         {
-            Address address = _mapper.Map<AddressDto, Address>(routeDto.ToAddress);
-            bool isFromOffice = false;
+            var address = _mapper.Map<AddressDto, Address>(routeDto.ToAddress);
+            Address secondAddress = null;
+
+            var routeType = RouteType.ToOffice;
 
             if (routeDto.FromAddress != null)
             {
-                address = _mapper.Map<AddressDto, Address>(routeDto.FromAddress);
-                isFromOffice = true;
+                if (routeDto.ToAddress != null)
+                {
+                    address = _mapper.Map<AddressDto, Address>(routeDto.FromAddress);
+                    secondAddress = _mapper.Map<AddressDto, Address>(routeDto.ToAddress);
+                    routeType = RouteType.OfficeToOffice;
+                }
+                else
+                {
+                    address = _mapper.Map<AddressDto, Address>(routeDto.FromAddress);
+                    routeType = RouteType.FromOffice;
+                }
             }
 
-            var entityRoutes = _routeRepository.GetRoutes(isFromOffice, address).ToList();
+            var entityRoutes = _routeRepository.GetRoutes(routeType, address, secondAddress).ToList();
 
             List<RouteDto> dtoRoutes = new List<RouteDto>();
-
             foreach (var route in entityRoutes)
             {
-                var drivers = route.Rides.Where(x => x.RideDateTime > DateTime.Now).Select(x => x.DriverEmail).Distinct().ToList();
-                if (drivers.Count() == 1 && drivers.SingleOrDefault(x => x == email) != null)
-                {
-                    continue;
-                }
-                    
                 RouteDto mappedRoute = _mapper.Map<Route, RouteDto>(route);
-                    mappedRoute.FromId = route.FromId;
-                    mappedRoute.ToId = route.ToId;
-                    mappedRoute.Drivers = drivers;
-                    dtoRoutes.Add(mappedRoute);
-                
+                mappedRoute.FromId = route.FromId;
+                mappedRoute.ToId = route.ToId;
+                var driverEmails = route.Rides.Select(x => x.DriverEmail).Distinct().ToList();
+                var driverNames = new List<string>();
+
+                foreach(var driver in driverEmails)
+                {
+                    if (driver != email)
+                    {
+                        var user = _userLogic.GetUserByEmail(EmailType.LOGIN, driver);
+                        mappedRoute.DriverFirstName = user.FirstName;
+                        mappedRoute.DriverLastName = user.LastName;
+                        mappedRoute.DriverEmail = user.Email;
+                        dtoRoutes.Add(_mapper.Map<RouteDto, RouteDto>(mappedRoute));
+                    }
+                }
             }
             return dtoRoutes;
         }

@@ -2,7 +2,6 @@
 {
     public class UserDto
     {
-        public int Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public long? FacebookId { get; set; }
@@ -18,6 +17,8 @@
         public string Phone { get; set; }
         public string CarColor { get; set; }
         public string CarModel { get; set; }
+        public AddressDto HomeAddress { get; set; }
+        public int HomeAddressId { get; set; }
         public int NumberOfSeats { get; set; }
     }
 }

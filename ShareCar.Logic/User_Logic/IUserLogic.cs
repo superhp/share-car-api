@@ -1,4 +1,5 @@
-﻿using ShareCar.Dto;
+﻿using ShareCar.Db.Entities;
+using ShareCar.Dto;
 using ShareCar.Dto.Identity;
 using ShareCar.Dto.Identity.Cognizant;
 using System;
@@ -10,7 +11,7 @@ namespace ShareCar.Logic.User_Logic
 {
     public interface IUserLogic
     {
-        Task<UserDto> GetUserAsync(ClaimsPrincipal principal);
+        Task<UserDto> GetLoggedInUser();
         Task UpdateUserAsync(UserDto updatedUser);
         int CountPoints(string email);
         List<Tuple<UserDto, int>> GetWinnerBoard();
@@ -24,6 +25,6 @@ namespace ShareCar.Logic.User_Logic
         bool DoesUserExist(EmailType type, string cognizantEmail);
         int GetPoints(string userEmail);
         List<UserDto> GetDrivers(string email);
-
+        void UpdateHomeAddress(AddressDto address, string userEmail);
     }
 }
