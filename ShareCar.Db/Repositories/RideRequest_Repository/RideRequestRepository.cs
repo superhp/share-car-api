@@ -96,5 +96,11 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
             _databaseContext.SaveChanges();
         }
 
+        public bool IsDriver(int requestId, string email)
+        {
+            var request = _databaseContext.Requests.Single(x => x.RideRequestId == requestId);
+            var ride = _databaseContext.Rides.Single(x => x.RideId == request.RideId);
+            return ride.DriverEmail == email;
+        }
     }
 }

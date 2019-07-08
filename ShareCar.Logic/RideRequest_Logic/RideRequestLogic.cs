@@ -288,7 +288,6 @@ namespace ShareCar.Logic.RideRequest_Logic
                     request.RequestNote = note.Text;
                 }
             }
-
             return converted.OrderByDescending(x => !x.SeenByPassenger).ThenByDescending(x => x.Status == Dto.Status.WAITING).ThenByDescending(x => x.Status == Dto.Status.ACCEPTED).ToList();
         }
 
@@ -296,6 +295,11 @@ namespace ShareCar.Logic.RideRequest_Logic
         {
             var request = _rideRequestRepository.GetRequestById(rideRequestId);
             return request.PassengerEmail == email;
+        }
+
+        public bool IsDriver(int requestId, string email)
+        {
+            return _rideRequestRepository.IsDriver(requestId, email);
         }
     }
 }

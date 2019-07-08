@@ -145,7 +145,7 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRides([FromBody] IEnumerable<RideDto> rides)
+        public async Task<IActionResult> AddRides([FromBody] List<RideDto> rides)
         {
             var userDto = await _userLogic.GetLoggedInUser();
             if (rides == null)

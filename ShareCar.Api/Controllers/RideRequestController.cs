@@ -58,7 +58,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("NoteSeenByDriver/{requestId}")]
         public async Task<IActionResult> RequestNoteSeenAsync(int requestId)
         {
-            await ValidatePassengerAsync(requestId);
+            await ValidateDriverAsync(requestId);
             _requestNoteLogic.NoteSeen(requestId);
             return Ok();
         }
@@ -122,6 +122,14 @@ namespace ShareCar.Api.Controllers
         {
             var userDto = await _userLogic.GetLoggedInUser();
             if (!_requestLogic.IsRequester(rideRequestId, userDto.Email))
+            {
+                throw new UnauthorizedAccessException();
+            }
+        }
+        private async Task ValidateDriverAsync(int requestId)
+        {
+            var userDto = await _userLogic.GetLoggedInUser();
+            if (!_requestLogic.IsDriver(requestId, userDto.Email))
             {
                 throw new UnauthorizedAccessException();
             }
