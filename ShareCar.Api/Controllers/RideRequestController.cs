@@ -47,7 +47,7 @@ namespace ShareCar.Api.Controllers
             return Ok(request);
         }
 
-        [HttpGet("seenPassenger/{requestId}")]
+        [HttpGet("noteSeenByPassenger/{requestId}")]
         public async Task<IActionResult> DriverSeenNoteAsync(int requestId)
         {
             await ValidatePassengerAsync(requestId);
@@ -55,7 +55,7 @@ namespace ShareCar.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("seenDriver/{requestId}")]
+        [HttpGet("NoteSeenByDriver/{requestId}")]
         public async Task<IActionResult> RequestNoteSeenAsync(int requestId)
         {
             await ValidatePassengerAsync(requestId);
@@ -86,8 +86,8 @@ namespace ShareCar.Api.Controllers
             return Ok();
         }
 
-        [HttpPost("seenPassenger")]
-        public async Task SeenRequestsPassengerAsync([FromBody] int[] requests)
+        [HttpPost("requestsSeenByPassenger")]
+        public async Task RequestsSeenByPassenger([FromBody] int[] requests)
         {
             foreach(var request in requests)
             {
@@ -96,10 +96,10 @@ namespace ShareCar.Api.Controllers
             _requestLogic.SeenByPassenger(requests);
         }
 
-        [HttpPost("seenDriver")]
-        public void SeenDriverPassenger([FromBody] int[] requests)
+        [HttpGet("requestsSeenByDriver/{rideId}")]
+        public void RequestsSeenByDriver(int rideId)
         {
-            _requestLogic.SeenByDriver(requests);
+            _requestLogic.SeenByDriver(rideId);
         }
 
         [HttpPut]

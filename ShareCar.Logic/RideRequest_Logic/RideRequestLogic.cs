@@ -177,9 +177,9 @@ namespace ShareCar.Logic.RideRequest_Logic
             _rideRequestRepository.SeenByPassenger(requests);
         }
 
-        void IRideRequestLogic.SeenByDriver(int[] requests)
+        void IRideRequestLogic.SeenByDriver(int rideId)
         {
-            _rideRequestRepository.SeenByDriver(requests);
+            _rideRequestRepository.SeenByDriver(rideId);
         }
 
         public List<RideRequestDto> ConvertRequestsToDto(IEnumerable<RideRequest> entityRequests, bool isDriver)

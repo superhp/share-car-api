@@ -15,7 +15,7 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
         IEnumerable<RideRequest> GetDriverRequests(string email);
         void UpdateRequest(RideRequest request);
         void SeenByPassenger(int[] requests);
-        void SeenByDriver(int[] requests);
+        void SeenByDriver(int rideId);
         void DeletedRide(IEnumerable<RideRequest> requests);
         IEnumerable<RideRequest> GetRequestsByRideId(int rideId);
 

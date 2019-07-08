@@ -63,13 +63,13 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
             return _databaseContext.Requests.Where(x => x.PassengerEmail == passengerEmail && x.Status == Status.DENIED).ToList();
         }
 
-        public void SeenByDriver(int[] requests)
+        public void SeenByDriver(int rideId)
         {
+            var ride = _databaseContext.Rides.Include(x => x.Requests).Single(x => x.RideId == rideId);
 
-            foreach (int id in requests)
+            foreach(var request in ride.Requests)
             {
-                RideRequest toUpdate = _databaseContext.Requests.Single(x => x.RideRequestId == id);
-                toUpdate.SeenByDriver = true;
+                request.SeenByDriver = true;
             }
 
             _databaseContext.SaveChanges();
