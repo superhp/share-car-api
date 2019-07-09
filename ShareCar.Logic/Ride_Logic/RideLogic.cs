@@ -186,7 +186,7 @@ namespace ShareCar.Logic.Ride_Logic
                         ride.Requested = true;
                     }
                 }
-                route.Rides.OrderBy(x => x.RideDateTime);
+                route.Rides = route.Rides.Where(x => x.RideDateTime >= DateTime.Now).OrderBy(x => x.RideDateTime).ToList();
             }
          //   foreach (RouteDto route in routes)
          //   {

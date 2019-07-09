@@ -196,10 +196,11 @@ namespace ShareCar.Logic.RideRequest_Logic
 
                 if (isDriver)
                 {
-                    var user = _userLogic.GetUserByEmail(EmailType.LOGIN, request.PassengerEmail);
-                    dtoRequests[count].PassengerFirstName = user.FirstName;
-                    dtoRequests[count].PassengerLastName = user.LastName;
-                    dtoRequests[count].PassengerPhone = user.Phone;
+                        var user = _userLogic.GetUserByEmail(EmailType.LOGIN, request.PassengerEmail);
+                        dtoRequests[count].PassengerFirstName = user.FirstName;
+                        dtoRequests[count].PassengerLastName = user.LastName;
+                        dtoRequests[count].PassengerPhone = user.Phone;
+
                 }
                 else
                 {
@@ -222,17 +223,6 @@ namespace ShareCar.Logic.RideRequest_Logic
         {
             IEnumerable<RideRequest> entityRequests = _rideRequestRepository.GetRequestsByRideId(rideId);
             _rideRequestRepository.DeletedRide(entityRequests);
-        }
-
-        public List<RideRequestDto> GetAcceptedRequests(string passengerEmail)
-        {
-            IEnumerable<RideRequest> entityRequests = _rideRequestRepository.GetAcceptedRequests(passengerEmail);
-            List<RideRequestDto> dtoRequests = new List<RideRequestDto>();
-            foreach (RideRequest request in entityRequests)
-            {
-                dtoRequests.Add(_mapper.Map<RideRequest, RideRequestDto>(request));
-            }
-            return dtoRequests;
         }
 
         public IEnumerable<RideRequestDto> GetDriverRequests(string email)
@@ -288,7 +278,12 @@ namespace ShareCar.Logic.RideRequest_Logic
                     request.RequestNote = note.Text;
                 }
             }
-            return converted.OrderByDescending(x => !x.SeenByPassenger).ThenByDescending(x => x.Status == Dto.Status.WAITING).ThenByDescending(x => x.Status == Dto.Status.ACCEPTED).ToList();
+            return converted.OrderByDescending(x => !x.SeenByPassenger)
+                .ThenBy(x => x.RideDateTime)
+                .ThenByDescending(x => x.Status == Dto.Status.WAITING)
+                .ThenBy(x => x.RideDateTime)
+                .ThenByDescending(x => x.Status == Dto.Status.ACCEPTED)
+                .ThenBy(x => x.RideDateTime).ToList();
         }
 
         public bool IsRequester(int rideRequestId, string email)
