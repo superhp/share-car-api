@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareCar.Db.Entities
 {
@@ -18,6 +19,9 @@ namespace ShareCar.Db.Entities
         public string CarColor { get; set; }
         public string CarModel { get; set; }
         public int NumberOfSeats { get; set; }
+        public int? HomeAddressId { get; set; }
+        [ForeignKey("HomeAddressId")]
+        public virtual Address HomeAddress { get; set; }
         public string Phone { get; set; }
     }
 }

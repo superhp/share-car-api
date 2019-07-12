@@ -50,7 +50,7 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
 
         public IEnumerable<RideRequest> GetDriverRequests(string email)
         {
-            return _databaseContext.Requests.Where(x => x.DriverEmail == email && (x.Status == Status.WAITING || (x.Status == Status.CANCELED && !x.SeenByDriver))).ToList();
+            return _databaseContext.Requests.Where(x => x.DriverEmail == email && (x.Status == Status.WAITING || x.Status == Status.ACCEPTED || (x.Status == Status.CANCELED && !x.SeenByDriver))).ToList();
         }
 
         public RideRequest GetRequestById(int id)
@@ -63,13 +63,13 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
             return _databaseContext.Requests.Where(x => x.PassengerEmail == passengerEmail && x.Status == Status.DENIED).ToList();
         }
 
-        public void SeenByDriver(int[] requests)
+        public void SeenByDriver(int rideId)
         {
+            var ride = _databaseContext.Rides.Include(x => x.Requests).Single(x => x.RideId == rideId);
 
-            foreach (int id in requests)
+            foreach(var request in ride.Requests)
             {
-                RideRequest toUpdate = _databaseContext.Requests.Single(x => x.RideRequestId == id);
-                toUpdate.SeenByDriver = true;
+                request.SeenByDriver = true;
             }
 
             _databaseContext.SaveChanges();
@@ -96,5 +96,11 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
             _databaseContext.SaveChanges();
         }
 
+        public bool IsDriver(int requestId, string email)
+        {
+            var request = _databaseContext.Requests.Single(x => x.RideRequestId == requestId);
+            var ride = _databaseContext.Rides.Single(x => x.RideId == request.RideId);
+            return ride.DriverEmail == email;
+        }
     }
 }

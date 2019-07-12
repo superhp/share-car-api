@@ -21,4 +21,10 @@ namespace ShareCar.Db.Entities
         [ForeignKey("ToId")]
         public virtual Address ToAddress { get; set; }
     }
+    public enum RouteType
+    {
+        FromOffice,
+        ToOffice,
+        OfficeToOffice
+    }
 }

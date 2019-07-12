@@ -120,7 +120,6 @@ namespace ShareCar.Logic.RideRequest_Logic
             {
                 if(request.Status == Dto.Status.WAITING || 
                     request.Status == Dto.Status.CANCELED ||
-                    previousStatus == Dto.Status.CANCELED ||
                     previousStatus == Dto.Status.DELETED ||
                     previousStatus == Dto.Status.DENIED ||
                     (previousStatus == Dto.Status.ACCEPTED && request.Status == Dto.Status.DENIED))
@@ -130,10 +129,7 @@ namespace ShareCar.Logic.RideRequest_Logic
             }
             else
             {
-                if (previousStatus != Dto.Status.WAITING ||
-                    request.Status == Dto.Status.ACCEPTED ||
-                    request.Status == Dto.Status.DENIED || 
-                    request.Status == Dto.Status.DELETED)
+                if (request.Status != Dto.Status.CANCELED)
                 {
                     throw new UnauthorizedAccessException();
                 }
@@ -191,9 +187,9 @@ namespace ShareCar.Logic.RideRequest_Logic
             _rideRequestRepository.SeenByPassenger(requests);
         }
 
-        void IRideRequestLogic.SeenByDriver(int[] requests)
+        void IRideRequestLogic.SeenByDriver(int rideId)
         {
-            _rideRequestRepository.SeenByDriver(requests);
+            _rideRequestRepository.SeenByDriver(rideId);
         }
 
         public List<RideRequestDto> ConvertRequestsToDto(IEnumerable<RideRequest> entityRequests, bool isDriver)
@@ -210,10 +206,11 @@ namespace ShareCar.Logic.RideRequest_Logic
 
                 if (isDriver)
                 {
-                    var user = _userLogic.GetUserByEmail(EmailType.LOGIN, request.PassengerEmail);
-                    dtoRequests[count].PassengerFirstName = user.FirstName;
-                    dtoRequests[count].PassengerLastName = user.LastName;
-                    dtoRequests[count].PassengerPhone = user.Phone;
+                        var user = _userLogic.GetUserByEmail(EmailType.LOGIN, request.PassengerEmail);
+                        dtoRequests[count].PassengerFirstName = user.FirstName;
+                        dtoRequests[count].PassengerLastName = user.LastName;
+                        dtoRequests[count].PassengerPhone = user.Phone;
+
                 }
                 else
                 {
@@ -236,17 +233,6 @@ namespace ShareCar.Logic.RideRequest_Logic
         {
             IEnumerable<RideRequest> entityRequests = _rideRequestRepository.GetRequestsByRideId(rideId);
             _rideRequestRepository.DeletedRide(entityRequests);
-        }
-
-        public List<RideRequestDto> GetAcceptedRequests(string passengerEmail)
-        {
-            IEnumerable<RideRequest> entityRequests = _rideRequestRepository.GetAcceptedRequests(passengerEmail);
-            List<RideRequestDto> dtoRequests = new List<RideRequestDto>();
-            foreach (RideRequest request in entityRequests)
-            {
-                dtoRequests.Add(_mapper.Map<RideRequest, RideRequestDto>(request));
-            }
-            return dtoRequests;
         }
 
         public IEnumerable<RideRequestDto> GetDriverRequests(string email)
@@ -302,14 +288,23 @@ namespace ShareCar.Logic.RideRequest_Logic
                     request.RequestNote = note.Text;
                 }
             }
-
-            return converted.OrderByDescending(x => !x.SeenByPassenger).ThenByDescending(x => x.Status == Dto.Status.WAITING).ThenByDescending(x => x.Status == Dto.Status.ACCEPTED).ToList();
+            return converted.OrderByDescending(x => !x.SeenByPassenger)
+                .ThenBy(x => x.RideDateTime)
+                .ThenByDescending(x => x.Status == Dto.Status.WAITING)
+                .ThenBy(x => x.RideDateTime)
+                .ThenByDescending(x => x.Status == Dto.Status.ACCEPTED)
+                .ThenBy(x => x.RideDateTime).ToList();
         }
 
         public bool IsRequester(int rideRequestId, string email)
         {
             var request = _rideRequestRepository.GetRequestById(rideRequestId);
             return request.PassengerEmail == email;
+        }
+
+        public bool IsDriver(int requestId, string email)
+        {
+            return _rideRequestRepository.IsDriver(requestId, email);
         }
     }
 }

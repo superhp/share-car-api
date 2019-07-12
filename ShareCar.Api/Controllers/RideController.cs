@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ using ShareCar.Logic.Passenger_Logic;
 using ShareCar.Logic.Ride_Logic;
 using ShareCar.Logic.RideRequest_Logic;
 using ShareCar.Logic.Route_Logic;
+using ShareCar.Logic.User_Logic;
 
 namespace ShareCar.Api.Controllers
 {
@@ -27,19 +29,19 @@ namespace ShareCar.Api.Controllers
         private readonly IRideLogic _rideLogic;
         private readonly IRouteLogic _routeLogic;
         private readonly IRideRequestLogic _rideRequestLogic;
-        private readonly IUserRepository _userRepository;
+        private readonly IUserLogic _userLogic;
         private readonly IPassengerLogic _passengerLogic;
         private readonly IDriverNoteLogic _driverNoteLogic;
         private readonly IAddressLogic _addressLogic;
         private readonly IDriverSeenNoteRepository _driverSeenNoteRepository;
 
-        public RideController(IAddressLogic addressLogic, IRideRequestLogic rideRequestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IRideLogic rideLogic, IRouteLogic routeLogic, IUserRepository userRepository, IPassengerLogic passengerLogic, IDriverNoteLogic driverNoteLogic)
+        public RideController(IAddressLogic addressLogic, IRideRequestLogic rideRequestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IRideLogic rideLogic, IRouteLogic routeLogic, IUserLogic userLogic, IPassengerLogic passengerLogic, IDriverNoteLogic driverNoteLogic)
         {
             _addressLogic = addressLogic;
             _rideLogic = rideLogic;
             _rideRequestLogic = rideRequestLogic;
             _routeLogic = routeLogic;
-            _userRepository = userRepository;
+            _userLogic = userLogic;
             _passengerLogic = passengerLogic;
             _driverNoteLogic = driverNoteLogic;
             _driverSeenNoteRepository = driverSeenNoteRepository;
@@ -58,7 +60,7 @@ namespace ShareCar.Api.Controllers
         public async Task<IActionResult> PassengerResponseAsync([FromBody]PassengerResponseDto response)
         {
 
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             await ValidatePassengerAsync(response.RideId);
             _passengerLogic.RespondToRide(response.Response, response.RideId, userDto.Email);
 
@@ -68,7 +70,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("checkFinished")]
         public async Task<IActionResult> CheckForFinishedRidesAsync()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             List<RideDto> rides = _rideLogic.GetFinishedPassengerRides(userDto.Email);
             return Ok(rides);
@@ -77,7 +79,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRidesByLoggedUser()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             List<RideDto> rides = (List<RideDto>)_rideLogic.GetRidesByDriver(userDto.Email);
 
             var requests = _rideRequestLogic.GetDriverRequests(userDto.Email);
@@ -93,7 +95,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("RidesByRoute/{routeId}")]
         public async Task<IActionResult> GetRidesByRouteAsync(int routeId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             IEnumerable<RideDto> rides = _rideLogic.GetRidesByRoute(routeId, userDto.Email);
             return Ok(rides);
         }
@@ -106,7 +108,7 @@ namespace ShareCar.Api.Controllers
             { 
             return BadRequest();
         }
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             IEnumerable<RouteDto> routes = _rideLogic.GetRoutes(routeDto, userDto.Email);
 
             return Ok(routes);
@@ -115,7 +117,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("rideId={rideId}")]
         public async Task<IActionResult> GetPassengersByRideAsync(int rideId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             await ValidateDriverAsync(rideId);
 
             IEnumerable<PassengerDto> passengers = _rideLogic.GetPassengersByRideId(rideId);
@@ -124,24 +126,28 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpPut("disactivate")]
-        public async Task<IActionResult> SetRideAsInactive([FromBody] RideDto rideDto)
+        public async Task<IActionResult> SetRideAsInactive([FromBody] List<RideDto> rides)
         {
-            await ValidateDriverAsync(rideDto.RideId);
-            var userDto = await _userRepository.GetLoggedInUser(User);
-            if (rideDto == null)
+            foreach (var rideDto in rides)
             {
-                return BadRequest();
+                await ValidateDriverAsync(rideDto.RideId);
+
+                var userDto = await _userLogic.GetLoggedInUser();
+                if (rideDto == null)
+                {
+                    return BadRequest();
+                }
+                _passengerLogic.RemovePassengerByRide(rideDto.RideId);
+                _rideRequestLogic.DeletedRide(rideDto.RideId);
+                _rideLogic.SetRideAsInactive(rideDto);
             }
-            _passengerLogic.RemovePassengerByRide(rideDto.RideId);
-            _rideRequestLogic.DeletedRide(rideDto.RideId);
-            _rideLogic.SetRideAsInactive(rideDto);
             return Ok();
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRides([FromBody] IEnumerable<RideDto> rides)
+        public async Task<IActionResult> AddRides([FromBody] List<RideDto> rides)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             if (rides == null)
             {
                 return BadRequest();
@@ -155,7 +161,7 @@ namespace ShareCar.Api.Controllers
         }
         private async Task ValidateDriverAsync(int rideId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             if (!_rideLogic.IsDriver(rideId, userDto.Email))
             {
                 throw new UnauthorizedAccessException();
@@ -164,7 +170,7 @@ namespace ShareCar.Api.Controllers
 
         private async Task ValidatePassengerAsync(int rideId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             if (!_rideLogic.IsPassenger(rideId, userDto.Email))
             {
                 throw new UnauthorizedAccessException();

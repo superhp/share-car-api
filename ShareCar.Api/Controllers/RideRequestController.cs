@@ -13,6 +13,7 @@ using ShareCar.Db.Repositories.User_Repository;
 using ShareCar.Logic.Exceptions;
 using ShareCar.Logic.Note_Logic;
 using ShareCar.Db.Repositories.Notes_Repository;
+using ShareCar.Logic.User_Logic;
 
 namespace ShareCar.Api.Controllers
 {
@@ -23,14 +24,14 @@ namespace ShareCar.Api.Controllers
     {
         private readonly IRideRequestLogic _requestLogic;
         private readonly IRideRequestNoteLogic _requestNoteLogic;
-        private readonly IUserRepository _userRepository;
+        private readonly IUserLogic _userLogic;
         private readonly IRideLogic _rideLogic;
         private readonly IDriverSeenNoteRepository _driverSeenNoteRepository;
 
-        public RideRequestController(IRideRequestLogic requestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IUserRepository userRepository, IRideLogic rideLogic, IRideRequestNoteLogic noteLogic)
+        public RideRequestController(IRideRequestLogic requestLogic, IDriverSeenNoteRepository driverSeenNoteRepository, IUserLogic userLogic, IRideLogic rideLogic, IRideRequestNoteLogic noteLogic)
         {
             _requestLogic = requestLogic;
-            _userRepository = userRepository;
+            _userLogic = userLogic;
             _rideLogic = rideLogic;
             _requestNoteLogic = noteLogic;
             _driverSeenNoteRepository = driverSeenNoteRepository;
@@ -39,14 +40,14 @@ namespace ShareCar.Api.Controllers
         [HttpGet("passenger")]
         public async Task<IActionResult> GetPassengerRequests()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             IEnumerable<RideRequestDto> request = _requestLogic.GetPassengerRequests(userDto.Email);
 
             return Ok(request);
         }
 
-        [HttpGet("{requestId}")]
+        [HttpGet("noteSeenByPassenger/{requestId}")]
         public async Task<IActionResult> DriverSeenNoteAsync(int requestId)
         {
             await ValidatePassengerAsync(requestId);
@@ -54,10 +55,10 @@ namespace ShareCar.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("{requestId}")]
+        [HttpGet("NoteSeenByDriver/{requestId}")]
         public async Task<IActionResult> RequestNoteSeenAsync(int requestId)
         {
-            await ValidatePassengerAsync(requestId);
+            await ValidateDriverAsync(requestId);
             _requestNoteLogic.NoteSeen(requestId);
             return Ok();
         }
@@ -77,7 +78,7 @@ namespace ShareCar.Api.Controllers
             {
                 return BadRequest();
             }
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             request.PassengerEmail = userDto.Email;
 
             _requestLogic.AddRequest(request);
@@ -85,8 +86,8 @@ namespace ShareCar.Api.Controllers
             return Ok();
         }
 
-        [HttpPost("seenPassenger")]
-        public async Task SeenRequestsPassengerAsync([FromBody] int[] requests)
+        [HttpPost("requestsSeenByPassenger")]
+        public async Task RequestsSeenByPassenger([FromBody] int[] requests)
         {
             foreach(var request in requests)
             {
@@ -95,30 +96,40 @@ namespace ShareCar.Api.Controllers
             _requestLogic.SeenByPassenger(requests);
         }
 
-        [HttpPost("seenDriver")]
-        public void SeenDriverPassenger([FromBody] int[] requests)
+        [HttpGet("requestsSeenByDriver/{rideId}")]
+        public void RequestsSeenByDriver(int rideId)
         {
-            _requestLogic.SeenByDriver(requests);
+            _requestLogic.SeenByDriver(rideId);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateRequestsAsync([FromBody] RideRequestDto request)
+        public async Task<IActionResult> UpdateRequestsAsync([FromBody] List<RideRequestDto> requests)
         {
-            if (request == null)
+            if (requests.Count == 0)
             {
                 return BadRequest();
             }
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
-            _requestLogic.UpdateRequest(request, userDto.Email);
-
+            foreach (var request in requests)
+            {
+                _requestLogic.UpdateRequest(request, userDto.Email);
+            }
             return Ok();
         }
 
         private async Task ValidatePassengerAsync(int rideRequestId)
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             if (!_requestLogic.IsRequester(rideRequestId, userDto.Email))
+            {
+                throw new UnauthorizedAccessException();
+            }
+        }
+        private async Task ValidateDriverAsync(int requestId)
+        {
+            var userDto = await _userLogic.GetLoggedInUser();
+            if (!_requestLogic.IsDriver(requestId, userDto.Email))
             {
                 throw new UnauthorizedAccessException();
             }

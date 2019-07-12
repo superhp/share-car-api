@@ -14,17 +14,15 @@ namespace ShareCar.Api.Controllers
     public class UserController : Controller
     {
         private readonly IUserLogic _userLogic;
-        private readonly IUserRepository _userRepository;
 
-        public UserController(IUserLogic userLogic, IUserRepository userRepository)
+        public UserController(IUserLogic userLogic )
         {
             _userLogic = userLogic;
-            _userRepository = userRepository;
         }
 
         public async Task<IActionResult> Get()
         {
-            var userDto = await _userLogic.GetUserAsync(User);
+            var userDto = await _userLogic.GetLoggedInUser();
             int points = _userLogic.CountPoints(userDto.Email);
             return Ok(new
             {
@@ -53,7 +51,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("getDrivers")]
         public async Task<IActionResult> GetAllUsersAsync()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             var drivers = _userLogic.GetDrivers(userDto.Email);
 
@@ -63,7 +61,7 @@ namespace ShareCar.Api.Controllers
         [HttpGet("getPoints")]
         public async Task<IActionResult> GetPointsAsync()
         {
-            var userDto = await _userRepository.GetLoggedInUser(User);
+            var userDto = await _userLogic.GetLoggedInUser();
 
             return Ok(_userLogic.GetPoints(userDto.Email));
         }
@@ -79,6 +77,24 @@ namespace ShareCar.Api.Controllers
             await _userLogic.UpdateUserAsync(user);
             return Ok();
         }
+        [HttpPost("updateHomeAddress")]
+        public async Task<IActionResult> UpdateHomeAddress([FromBody] AddressDto address)
+        {
+            if (address == null)
+            {
+                return BadRequest();
+            }
+            var userDto = await _userLogic.GetLoggedInUser();
 
+            _userLogic.UpdateHomeAddress(address, userDto.Email);
+            return Ok();
+        }
+        [HttpGet("homeAddress")]
+        public async Task<IActionResult> GetHomeAddress()
+        {
+            var userDto = await _userLogic.GetLoggedInUser();
+
+            return Ok(userDto.HomeAddress);
+        }
     }
 }
