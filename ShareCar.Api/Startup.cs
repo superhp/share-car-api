@@ -1,6 +1,6 @@
-﻿using System;
-using System.Text;
-using Autofac.Extensions.DependencyInjection;
+﻿using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -9,15 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using ShareCar.Logic.DI;
 using ShareCar.Api.Middleware;
 using ShareCar.Db;
 using ShareCar.Db.Entities;
+using ShareCar.Dto;
 using ShareCar.Dto.Identity;
 using ShareCar.Dto.Identity.Facebook;
-using AutoMapper;
-using ShareCar.Dto;
-using System.Collections.Generic;
+using ShareCar.Logic.DI;
+using System;
+using System.Text;
 
 namespace ShareCar.Api
 {
@@ -41,16 +41,19 @@ namespace ShareCar.Api
                 optionsLifetime: ServiceLifetime.Transient
             );
 
-            services.AddCors(options => options.AddPolicy("CorsPolicy",
-                builder =>
-                {
-                    builder.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials();
-                }));
+            services.AddCors(options =>
+                options.AddPolicy("AllowSubdomain",
+                    builder =>
+                    {
+                        builder.SetIsOriginAllowedToAllowWildcardSubdomains();
+                    }
+                )
+            );
 
-            ConfigureAuthentication(services);
+               ConfigureAuthentication(services);
+
+
+
 
             services.AddMvc()
             .AddJsonOptions(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
@@ -78,7 +81,12 @@ namespace ShareCar.Api
 
             app.UseMiddleware<JwtInHeaderMiddleware>();
             app.UseMiddleware<ExceptionMiddleware>();
-            app.UseCors("CorsPolicy");
+            app.UseCors(
+                options => options.WithOrigins("https://ctsbaltic.com")
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+                    .AllowAnyHeader()
+            );
             app.UseAuthentication();
             app.UseMvc(routes =>
             {
@@ -91,9 +99,9 @@ namespace ShareCar.Api
 
         private void ConfigureAuthentication(IServiceCollection services)
         {
-            var jwtAppSettingOptions = ConfigureSettings(services);
+         //   var jwtAppSettingOptions = ConfigureSettings(services);
 
-            AddAuthentication(services, jwtAppSettingOptions);
+            AddAuthentication(services/*, jwtAppSettingOptions*/);
 
             AddIdentity(services);
         }
@@ -142,42 +150,53 @@ namespace ShareCar.Api
             builder.AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
         }
 
-        private void AddAuthentication(IServiceCollection services, IConfigurationSection jwtAppSettingOptions)
+        private void AddAuthentication(IServiceCollection services/*, IConfigurationSection jwtAppSettingOptions*/)
         {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = jwtAppSettingOptions[nameof(JwtIssuerOptions.Issuer)],
-
-                ValidateAudience = true,
-                ValidAudience = jwtAppSettingOptions[nameof(JwtIssuerOptions.Audience)],
-
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = _signingKey,
-
-                RequireExpirationTime = false,
-                ValidateLifetime = false,
-                ClockSkew = TimeSpan.Zero
-            };
-
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(configureOptions =>
-            {
-                configureOptions.ClaimsIssuer = jwtAppSettingOptions[nameof(JwtIssuerOptions.Issuer)];
-                configureOptions.TokenValidationParameters = tokenValidationParameters;
-                configureOptions.SaveToken = true;
-            });
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+.AddCookie(options =>
+{
+options.Cookie.Name = "CustomAuth";
+options.Cookie.Domain = ".ctsbaltic.com";
+});
+            /*  var tokenValidationParameters = new TokenValidationParameters
+              {
+                  ValidateIssuer = true,
+                  ValidIssuer = jwtAppSettingOptions[nameof(JwtIssuerOptions.Issuer)],
 
-            // api user claim policy
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("ApiUser",
-                    policy => policy.RequireClaim(jwtAppSettingOptions[nameof(JwtIssuerOptions.RoleClaimName)],
-                        jwtAppSettingOptions[nameof(JwtIssuerOptions.RoleClaimValue)]));
-            });
+                  ValidateAudience = true,
+                  ValidAudience = jwtAppSettingOptions[nameof(JwtIssuerOptions.Audience)],
+
+                  ValidateIssuerSigningKey = true,
+                  IssuerSigningKey = _signingKey,
+
+                  RequireExpirationTime = false,
+                  ValidateLifetime = false,
+                  ClockSkew = TimeSpan.Zero
+              };
+
+              services.AddAuthentication(options =>
+              {
+                  options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                  options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+              }).AddJwtBearer(configureOptions =>
+              {
+                  configureOptions.ClaimsIssuer = jwtAppSettingOptions[nameof(JwtIssuerOptions.Issuer)];
+                  configureOptions.TokenValidationParameters = tokenValidationParameters;
+                  configureOptions.SaveToken = true;
+              });
+
+              // api user claim policy
+              services.AddAuthorization(options =>
+              {
+                  options.AddPolicy("ApiUser",
+                      policy => policy.RequireClaim(jwtAppSettingOptions[nameof(JwtIssuerOptions.RoleClaimName)],
+                          jwtAppSettingOptions[nameof(JwtIssuerOptions.RoleClaimValue)]));
+              });*/
         }
     }
 }
