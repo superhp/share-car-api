@@ -16,7 +16,7 @@ namespace ShareCar.Logic.Ride_Logic
         void AddRide(RideDto ride, string email);
         void UpdateRide(RideDto ride);
         IEnumerable<RouteDto> GetRoutes(RouteDto routeDto, string email);
-        IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail);
+        //IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail);
         bool IsRideRequested(int rideId, string email);
         bool IsDriver(int rideId, string email);
         bool IsPassenger(int rideId, string email);

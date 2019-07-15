@@ -8,7 +8,7 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
 {
     public interface IRideRequestRepository
     {
-        IEnumerable<RideRequest> GetAcceptedRequests(string passengerEmail);
+       // IEnumerable<RideRequest> GetAcceptedRequests(string passengerEmail);
         RideRequest AddRequest(RideRequest request);
         RideRequest GetRequestById(int id);
         IEnumerable<RideRequest> GetPassengerRequests(string email);

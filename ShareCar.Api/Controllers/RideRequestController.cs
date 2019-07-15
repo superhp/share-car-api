@@ -97,8 +97,13 @@ namespace ShareCar.Api.Controllers
         }
 
         [HttpGet("requestsSeenByDriver/{rideId}")]
-        public void RequestsSeenByDriver(int rideId)
+        public async Task RequestsSeenByDriverAsync(int rideId)
         {
+            var userDto = await _userLogic.GetLoggedInUser();
+            if (!_rideLogic.IsDriver(rideId, userDto.Email))
+            {
+                throw new UnauthorizedAccessException();
+            }
             _requestLogic.SeenByDriver(rideId);
         }
 

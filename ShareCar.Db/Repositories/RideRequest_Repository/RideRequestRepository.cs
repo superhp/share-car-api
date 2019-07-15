@@ -58,10 +58,10 @@ namespace ShareCar.Db.Repositories.RideRequest_Repository
             return _databaseContext.Requests.Find(id);
         }
 
-        public IEnumerable<RideRequest> GetAcceptedRequests(string passengerEmail)
+       /* public IEnumerable<RideRequest> GetAcceptedRequests(string passengerEmail)
         {
             return _databaseContext.Requests.Where(x => x.PassengerEmail == passengerEmail && x.Status == Status.DENIED).ToList();
-        }
+        }*/
 
         public void SeenByDriver(int rideId)
         {

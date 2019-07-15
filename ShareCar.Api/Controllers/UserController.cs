@@ -48,16 +48,6 @@ namespace ShareCar.Api.Controllers
             });
         }
 
-        [HttpGet("getDrivers")]
-        public async Task<IActionResult> GetAllUsersAsync()
-        {
-            var userDto = await _userLogic.GetLoggedInUser();
-
-            var drivers = _userLogic.GetDrivers(userDto.Email);
-
-            return Ok(drivers);
-        }
-
         [HttpGet("getPoints")]
         public async Task<IActionResult> GetPointsAsync()
         {

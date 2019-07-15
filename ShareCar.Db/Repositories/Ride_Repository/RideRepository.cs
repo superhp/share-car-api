@@ -41,10 +41,10 @@ namespace ShareCar.Db.Repositories.Ride_Repository
             return _databaseContext.Passengers.Where(x => x.RideId == id);
         }
         
-        public IEnumerable<Ride> GetRidesByPassenger(Passenger passenger)
+        /*public IEnumerable<Ride> GetRidesByPassenger(Passenger passenger)
         {
             return _databaseContext.Rides.Where(x => x.Passengers.Contains(passenger) && x.isActive == true);
-        }
+        }*/
 
         public void UpdateRide(Ride ride)
         {
@@ -76,10 +76,10 @@ namespace ShareCar.Db.Repositories.Ride_Repository
                 .Where(x => x.DriverEmail == email && x.isActive == true);
         }
 
-        public IEnumerable<Ride> GetRidesByRoute(int routeId)
+        /*public IEnumerable<Ride> GetRidesByRoute(int routeId)
         {
             return _databaseContext.Rides.Where(x => x.RouteId == routeId && x.isActive && x.RideDateTime > DateTime.Now);
-        }
+        }*/
 
         public bool IsRideRequested(int rideId, string passengerEmail)
         {

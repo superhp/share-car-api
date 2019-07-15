@@ -14,8 +14,8 @@ namespace ShareCar.Db.Repositories.Ride_Repository
         void UpdateRide(Ride ride);
         void SetRideAsInactive(Ride ride);
         Ride AddRide(Ride ride);
-        IEnumerable<Ride> GetRidesByPassenger(Passenger passenger);
-        IEnumerable<Ride> GetRidesByRoute(int routeId);
+       // IEnumerable<Ride> GetRidesByPassenger(Passenger passenger);
+        //IEnumerable<Ride> GetRidesByRoute(int routeId);
         bool IsRideRequested(int rideId, string passengerEmail);
     }
 }

@@ -1,7 +1,6 @@
-﻿using System;
-using System.Text;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -9,15 +8,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using ShareCar.Logic.DI;
 using ShareCar.Api.Middleware;
 using ShareCar.Db;
 using ShareCar.Db.Entities;
+using ShareCar.Dto;
 using ShareCar.Dto.Identity;
 using ShareCar.Dto.Identity.Facebook;
-using AutoMapper;
-using ShareCar.Dto;
-using System.Collections.Generic;
+using ShareCar.Logic.DI;
+using System;
+using System.Text;
 
 namespace ShareCar.Api
 {
@@ -162,14 +161,14 @@ namespace ShareCar.Api
 
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(configureOptions =>
-            {
-                configureOptions.ClaimsIssuer = jwtAppSettingOptions[nameof(JwtIssuerOptions.Issuer)];
-                configureOptions.TokenValidationParameters = tokenValidationParameters;
-                configureOptions.SaveToken = true;
-            });
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+   .AddCookie(options =>
+   {
+       options.Cookie.Name = "CustomAuth";
+   });
 
             // api user claim policy
             services.AddAuthorization(options =>

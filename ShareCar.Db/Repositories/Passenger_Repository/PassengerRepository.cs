@@ -38,10 +38,10 @@ namespace ShareCar.Db.Repositories.Passenger_Repository
 
         }
 
-        public IEnumerable<Passenger> GetPassengersByDriver(string email)
+        /*public IEnumerable<Passenger> GetPassengersByDriver(string email)
         {
             return _databaseContext.Passengers.Include(x => x.Ride.Requests).Where(x => x.Ride.DriverEmail == email);
-        }
+        }*/
 
         public void RespondToRide(bool response, int rideId, string passengerEmail)
         {

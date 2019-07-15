@@ -26,10 +26,10 @@ namespace ShareCar.Db.Repositories.Notes_Repository
             return _databaseContext.RideRequestNotes.Include(x => x.RideRequest).Where(x => x.RideRequest.PassengerEmail == email);
         }
 
-        public RideRequestNote GetNoteByRide(int rideId)
+        /*public RideRequestNote GetNoteByRide(int rideId)
         {
            return _databaseContext.RideRequestNotes.Include(x => x.RideRequest).FirstOrDefault(x => x.RideRequest.RideId == rideId);
-        }
+        }*/
 
         public RideRequestNote GetNoteByRideRequest(int rideRequestId)
         {

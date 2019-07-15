@@ -92,13 +92,13 @@ namespace ShareCar.Api.Controllers
             return Ok(rides);
         }
 
-        [HttpGet("RidesByRoute/{routeId}")]
+       /* [HttpGet("RidesByRoute/{routeId}")]
         public async Task<IActionResult> GetRidesByRouteAsync(int routeId)
         {
             var userDto = await _userLogic.GetLoggedInUser();
             IEnumerable<RideDto> rides = _rideLogic.GetRidesByRoute(routeId, userDto.Email);
             return Ok(rides);
-        }
+        }*/
 
         [HttpPost("routes")]
         public async Task<IActionResult> GetRoutesAsync([FromBody]RouteDto routeDto)
@@ -112,17 +112,6 @@ namespace ShareCar.Api.Controllers
             IEnumerable<RouteDto> routes = _rideLogic.GetRoutes(routeDto, userDto.Email);
 
             return Ok(routes);
-        }
-
-        [HttpGet("rideId={rideId}")]
-        public async Task<IActionResult> GetPassengersByRideAsync(int rideId)
-        {
-            var userDto = await _userLogic.GetLoggedInUser();
-            await ValidateDriverAsync(rideId);
-
-            IEnumerable<PassengerDto> passengers = _rideLogic.GetPassengersByRideId(rideId);
-            return Ok(passengers);
-
         }
 
         [HttpPut("disactivate")]

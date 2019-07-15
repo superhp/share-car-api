@@ -59,24 +59,24 @@ namespace ShareCar.Logic.Ride_Logic
 
             List<RideDto> dtoRides = new List<RideDto>();
 
-            var passengers = _passengerLogic.GetPassengersByDriver(email);
+          //  var passengers = _passengerLogic.GetPassengersByDriver(email);
 
             var notes = _driverNoteLogic.GetNotesByDriver(email);
 
             List<UserDto> users = new List<UserDto>();
 
-            foreach (var passenger in passengers.GroupBy(x => x.Email).Select(g => g.First()).ToList())
-            {
-                users.Add(_userLogic.GetUserByEmail(EmailType.LOGIN, passenger.Email));
-            }
+        //    foreach (var passenger in passengers.GroupBy(x => x.Email).Select(g => g.First()).ToList())
+       //     {
+       //         users.Add(_userLogic.GetUserByEmail(EmailType.LOGIN, passenger.Email));
+        //    }
 
-            foreach (var passenger in passengers)
+        /*    foreach (var passenger in passengers)
             {
                 var user = users.Single(x => x.Email == passenger.Email);
                 passenger.FirstName = user.FirstName;
                 passenger.LastName = user.LastName;
                 passenger.Phone = user.Phone;
-            }
+            }*/
 
             foreach (var ride in rides)
             {
@@ -92,7 +92,7 @@ namespace ShareCar.Logic.Ride_Logic
                 {
                     dtoRide.Finished = true;
                 }
-                dtoRide.Passengers = passengers.Where(x => x.RideId == ride.RideId).ToList();
+             //   dtoRide.Passengers = passengers.Where(x => x.RideId == ride.RideId).ToList();
                 dtoRides.Add(dtoRide);
             }
             return dtoRides.OrderBy(x => x, new CustomComparer()).ToList();
@@ -222,7 +222,7 @@ namespace ShareCar.Logic.Ride_Logic
             }
             return dtoRides;
         }
-
+        /*
         public bool AddDriversNamesToRides(List<RouteRideDto> dtoRides)
         {
       /*      List<string> emails = new List<string>();
@@ -249,11 +249,11 @@ namespace ShareCar.Logic.Ride_Logic
                     ride.DriverLastName = LastNames[index];
                     ride.DriverPhone = phones[index];
                 }
-            }*/
+            }
             return true;
         }
-
-        public IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail)
+        */
+       /* public IEnumerable<RideDto> GetRidesByRoute(int routeId, string passengerEmail)
         {
             IEnumerable<Ride> entityRides = _rideRepository.GetRidesByRoute(routeId);
 
@@ -271,7 +271,7 @@ namespace ShareCar.Logic.Ride_Logic
 
             return dtoRides.OrderBy(x => x.RideDateTime);
         }
-
+        */
         public void UpdateRide(RideDto ride)
         {
             _rideRepository.UpdateRide(_mapper.Map<RideDto, Ride>(ride));
